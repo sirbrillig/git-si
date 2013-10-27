@@ -1,0 +1,5 @@
+module Git
+  module Si
+    VERSION = "0.0.1"
+  end
+end

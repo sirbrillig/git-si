@@ -256,7 +256,7 @@ module Git
 
       def print_colordiff(diff)
         diff.each_line do |line|
-          line.strip!
+          line.rstrip!
           case line
           when /^\+/, /^A/
             line = set_color line, :green

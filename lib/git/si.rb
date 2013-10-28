@@ -89,6 +89,12 @@ module Git
         end
       end
 
+      desc "pull", "Fetch the latest svn commit and rebase the current branch."
+      def pull
+        fetch
+        rebase
+      end
+
 
       private
 

@@ -55,7 +55,7 @@ module Git
           results = git_log.match(/svn update to version (\d+)/i)
           last_rebased_version = results[1] if results
           if last_fetched_version and last_rebased_version
-            raise VersionError.new("This branch is out-of-date (rev $OUR_PULLED_REV; mirror branch is at $LAST_PULLED_REV). You should do a git lt rebase.") if last_fetched_version != last_rebased_version
+            raise VersionError.new("This branch is out-of-date (rev #{last_rebased_version}; mirror branch is at #{last_fetched_version}). You should do a git si rebase.") if last_fetched_version != last_rebased_version
           else
             notice_message "Could not determine last version information. This may be fine if you haven't used git-si before."
           end
@@ -90,8 +90,8 @@ module Git
         end
         on_mirror_branch do
           notice_message "Fetching remote data from svn"
-          `svn up --accept theirs-full --ignore-externals && svn revert -R ./ && git add . && git commit -am "svn update to version #{get_svn_version}"`
-          raise SvnError.new("The fetch failed. I'm not sure why, but look at any error messages above.") unless $?.success?
+          run_command("svn up --accept theirs-full --ignore-externals && svn revert -R ./")
+          system("git add . && git commit -am 'svn update to version #{get_svn_version}'")
         end
         success_message "fetch complete!"
       end
@@ -99,8 +99,7 @@ module Git
       desc "rebase", "Rebases current branch to mirror branch."
       def rebase
         on_local_branch do
-          `git rebase "#{@@mirror_branch}"`
-          raise GitError.new("The rebase failed. I'm not sure why, but look at any error messages above.") unless $?.success?
+          run_command("git rebase '#{@@mirror_branch}'")
           success_message "rebase complete!"
         end
       end

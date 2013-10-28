@@ -28,7 +28,18 @@ module Git
       def status(*args)
         on_local_branch do
           command = "svn status --ignore-externals " + args.join(' ')
-          run_command(command)
+          svn_status = `#{command}`
+          svn_status.each_line do |line|
+            case line.strip!
+            when /^X/, /\.git/, /\.swp$/
+            else
+              if STDOUT.tty?
+                print_colordiff line
+              else
+                say line
+              end
+            end
+          end
         end
       end
 
@@ -173,10 +184,12 @@ module Git
         diff.each_line do |line|
           line.strip!
           case line
-          when /^\+/
+          when /^\+/, /^A/
             line = set_color line, :green
-          when /^\-/
+          when /^\-/, /^M/
             line = set_color line, :red
+          when /^\?/
+            line = set_color line, :yellow
           end
           say line
         end

@@ -95,6 +95,20 @@ module Git
         rebase
       end
 
+      desc "commit", "Perform an svn commit and update the mirror branch."
+      def commit
+        on_local_branch do
+          `svn commit`
+          raise SvnError.new("svn commit failed. I'm not sure why, but look at any error messages above.") unless $?.success?
+          success_message "commit complete!"
+          if yes? "Do you want to update the mirror branch to the latest commit? [y/N] "
+            on_mirror_branch do
+              fetch
+            end
+          end
+        end
+      end
+
 
       private
 

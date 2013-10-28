@@ -9,6 +9,9 @@ module Git
     class GitSiError < StandardError
     end
 
+    class ShellError < GitSiError
+    end
+
     class GitError < GitSiError
     end
 
@@ -29,6 +32,7 @@ module Git
         on_local_branch do
           command = "svn status --ignore-externals " + args.join(' ')
           svn_status = `#{command}`
+          raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
           svn_status.each_line do |line|
             case line.strip!
             when /^X/, /\.git/, /\.swp$/
@@ -53,10 +57,11 @@ module Git
           if last_fetched_version and last_rebased_version
             raise VersionError.new("This branch is out-of-date (rev $OUR_PULLED_REV; mirror branch is at $LAST_PULLED_REV). You should do a git lt rebase.") if last_fetched_version != last_rebased_version
           else
-            error_message "Could not determine version information"
+            notice_message "Could not determine last version information. This may be fine if you haven't used git-si before."
           end
 
           command = "svn diff " + args.join(' ')
+          notice_message "Running #{command}"
           results = `#{command}`
           if STDOUT.tty?
             page
@@ -128,6 +133,66 @@ module Git
         end
       end
 
+      desc "init", "Initializes git-si in this directory with a gitignore and creates a special mirror branch."
+      def init
+        on_local_branch do
+          # check for svn repo
+          `svn info`
+          raise SvnError.new("No svn repository was found here. Maybe you're in the wrong directory?") unless $?.success?
+          make_a_commit = false
+
+          # check for existing .git repo
+          if File.exist? '.git'
+            notice_message "Looks like a git repository already exists here."
+          else
+            notice_message "Initializing git repository"
+            `git init`
+            raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless $?.success?
+            make_a_commit = true
+          end
+
+          # check for existing .gitingore
+          gitignore = [".svn", "*.swp", ".config", "*.err", "*.pid", "*.log"]
+          command = "svn status --ignore-externals "
+          svn_status = `#{command}`
+          raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
+          externals = []
+          svn_status.each_line do |line|
+            externals << $1 if line.strip.match(/^X\s+(\S.+)/)
+          end
+          gitignore += externals
+          gitignore = gitignore.join("\n")
+
+          if File.exist? '.gitignore'
+            notice_message "Looks like a gitignore file already exists here."
+            error_message "Be SURE that the gitignore contains the following:\n#{gitignore}"
+          else
+            notice_message "Creating gitignore file."
+            create_file('.gitignore', gitignore)
+            run_command("git add .gitignore")
+            make_a_commit = true
+          end
+
+          # make initial commit
+          if make_a_commit
+            notice_message "Making initial commit."
+            run_command("git add .")
+            run_command("git commit -am 'initial commit by git-si'")
+          end
+
+          # check for exiting mirror branch
+          `git show-ref refs/heads/#{@@mirror_branch}`
+          if $?.success?
+            notice_message "Looks like the mirror branch already exists here."
+          else
+            notice_message "Creating mirror branch '#{@@mirror_branch}'."
+            run_command("git branch '#{@@mirror_branch}'")
+          end
+
+          success_message "init complete!"
+        end
+      end
+
 
       private
 
@@ -186,6 +251,7 @@ module Git
         else
           run(command, options.update(verbose: false))
         end
+        raise ShellError.new("There was an error while trying to run the command: #{command}. Look above for any errors.") unless $?.success?
       end
 
       def print_colordiff(diff)

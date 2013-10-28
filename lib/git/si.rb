@@ -90,7 +90,8 @@ module Git
         end
         on_mirror_branch do
           notice_message "Fetching remote data from svn"
-          run_command("svn up --accept theirs-full --ignore-externals && svn revert -R ./")
+          run_command("svn up --accept theirs-full --ignore-externals")
+          run_command("svn revert -R ./")
           system("git add .")
           run_command("git commit --allow-empty -am 'svn update to version #{get_svn_version}'")
         end

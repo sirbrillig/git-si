@@ -18,7 +18,7 @@ module Git
       desc "status [FILES]", "Perform an svn status."
       def status(*args)
         command = "svn status --ignore-externals " + args.join(' ')
-        run(command)
+        run_command(command)
       end
 
       desc "diff [FILES]", "Perform an svn diff piped through a colorizer. Also tests to be sure a rebase is not needed."
@@ -33,7 +33,23 @@ module Git
         end
       end
 
+      desc "add [FILES]", "Perform an svn and a git add on the files."
+      def add(*args)
+        command = "svn add " + args.join(' ')
+        run_command(command)
+        command = "git add " + args.join(' ')
+        run_command(command)
+      end
+
       private
+
+      def run_command(command, options={})
+        if STDOUT.tty?
+          run(command, options)
+        else
+          run(command, options.update(verbose: false))
+        end
+      end
 
       def print_colordiff(diff)
         diff.each_line do |line|

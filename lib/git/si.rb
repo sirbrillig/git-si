@@ -80,6 +80,15 @@ module Git
         success_message "fetch complete!"
       end
 
+      desc "rebase", "Rebases current branch to mirror branch."
+      def rebase
+        on_local_branch do
+          `git rebase "#{@@mirror_branch}"`
+          raise GitError.new("The rebase failed. I'm not sure why, but look at any error messages above.") unless $?.success?
+          success_message "rebase complete!"
+        end
+      end
+
 
       private
 

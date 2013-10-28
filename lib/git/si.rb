@@ -120,6 +120,14 @@ module Git
         end
       end
 
+      desc "blame <FILE>", "Alias for svn blame."
+      def blame(*args)
+        on_local_branch do
+          command = "svn blame " + args.join(' ')
+          run_command(command)
+        end
+      end
+
 
       private
 

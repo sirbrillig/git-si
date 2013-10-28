@@ -8,17 +8,14 @@ Git Svn Interface: a simple git extention to use git locally with a remote svn r
 
 ## Usage
 
-    git lt help  # How do I use this thing?
-    git lt init  # Initializes a git repository with a gitignore and creates a special mirror branch
-    git lt pull  # Fetch the latest svn commit and rebase the current branch.
-    git lt push  # Make an svn commit for the most recent git commit. Kind of like a squash.
-    git lt add   # Add a file to the git and svn repos.
-    git lt diff  # Alias for svn diff, piped through a highlighter
-    git lt blame # Alias for svn blame.
-    git lt commit  # Perform an svn commit and run git lt pull
-    git lt status  # Alias for svn status --ignore-externals
-    git lt rebase  # Rebases current branch to mirror branch
-    git lt fetch   # Updates mirror branch to latest svn commit
+    Commands:
+    git-si add [FILES]     # Perform an svn and a git add on the files.
+    git-si diff [FILES]    # Perform an svn diff piped through a colorizer. Also tests to be sure a rebase is not needed.
+    git-si fetch           # Updates mirror branch to latest svn commit.
+    git-si help [COMMAND]  # Describe available commands or one specific command
+    git-si pull            # Fetch the latest svn commit and rebase the current branch.
+    git-si rebase          # Rebases current branch to mirror branch.
+    git-si status [FILES]  # Perform an svn status.
 
 ## Contributing
 

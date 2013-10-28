@@ -23,6 +23,21 @@ module Git
 
       desc "diff [FILES]", "Perform an svn diff piped through a colorizer. Also tests to be sure a rebase is not needed."
       def diff(*args)
+        svn_info = `svn info`
+        results = svn_info.match(/^Revision:\s+(\d+)/)
+        last_fetched_version = results[1] if results
+        git_log = `git log --pretty=%B`
+        results = git_log.match(/svn update to version (\d+)/i)
+        last_rebased_version = results[1] if results
+        if last_fetched_version and last_rebased_version
+          if last_fetched_version != last_rebased_version
+            error_message "This branch is out-of-date (rev $OUR_PULLED_REV; mirror branch is at $LAST_PULLED_REV). You should do a git lt rebase."
+            exit
+          end
+        else
+          error_message "Could not determine version information"
+        end
+
         command = "svn diff " + args.join(' ')
         results = `#{command}`
         if STDOUT.tty?
@@ -42,6 +57,10 @@ module Git
       end
 
       private
+
+      def error_message(message)
+        $stderr.puts set_color message, :red
+      end
 
       def run_command(command, options={})
         if STDOUT.tty?

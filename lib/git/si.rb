@@ -25,7 +25,24 @@ module Git
       include Thor::Actions
       include Pager
 
+      default_task :usage
+
       @@mirror_branch = 'MIRRORBRANCH'
+
+      desc "usage", "How does this thing work?"
+      def usage
+        say "git-si
+
+Git Svn Interface: a simple git extention to use git locally with a remote svn
+repo. It's like a simple version of git-svn which doesn't keep track of history
+locally.
+
+Start with the init command to set up the mirror branch and from there you can
+use the commands below.
+
+"
+        help
+      end
 
       desc "status [FILES]", "Perform an svn status."
       def status(*args)

@@ -141,15 +141,18 @@ cause trouble because when your changes are committed and you try to
 rebase on top of them, you may end up with merge errors as you are
 trying to apply patches of previous versions of your code. If you
 continue, it's wise to reset the master branch afterward."
-            return if ask("Do you want to continue with this commit? [Y/n] ") =~ /\s*^n/i
+            return if ask("Do you want to continue with this commit? [Y/n] ", :green) =~ /\s*^n/i
           end
 
           git_status = `git status --porcelain`
           raise GitError.new("There are local changes; please commit them before continuing.") if git_status.match(/^[^\?]/)
+          svn_diff = `svn diff`
+          raise SvnError.new("Failed to get the svn diff. I'm not sure why. Check for any errors above.") if ! $?.success?
+          raise SvnError.new("There are no changes to commit.") if svn_diff.strip.empty?
 
           run_command("svn commit")
           success_message "commit complete!"
-          if yes? "Do you want to update the mirror branch to the latest commit? [y/N] "
+          if yes? "Do you want to update the mirror branch to the latest commit? [y/N] ", :green
             on_mirror_branch do
               fetch
               mirror_is_updated = true
@@ -160,14 +163,14 @@ continue, it's wise to reset the master branch afterward."
         if mirror_is_updated
           local_branch = get_local_branch()
           if local_branch == 'master'
-            if yes? "Do you want to reset the current branch to the latest commit (losing all git history)? [y/N] "
+            if yes? "Do you want to reset the current branch to the latest commit (losing all git history)? [y/N] ", :green
               run_command("git checkout #{@@mirror_branch}")
               run_command("git branch -D '#{local_branch}'")
               run_command("git checkout -b #{local_branch}")
               success_message "branch '#{local_branch}' reset!"
             end
           else
-            if yes? "Do you want to switch to master and delete the committed branch '#{local_branch}'? [y/N] "
+            if yes? "Do you want to switch to master and delete the committed branch '#{local_branch}'? [y/N] ", :green
               run_command("git checkout master")
               rebase
               run_command("git branch -D '#{local_branch}'")

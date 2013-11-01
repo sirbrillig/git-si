@@ -31,7 +31,7 @@ module Git
 
       desc "usage", "How does this thing work?"
       def usage
-        say "git-si
+        say "git-si #{Git::Si::VERSION}
 
 Git Svn Interface: a simple git extention to use git locally with a remote svn
 repo. It's like a simple version of git-svn which doesn't keep track of history
@@ -131,12 +131,47 @@ use the commands below.
 
       desc "commit", "Perform an svn commit and update the mirror branch."
       def commit
+        mirror_is_updated = false
+
         on_local_branch do
+          local_branch = get_local_branch()
+          if local_branch == 'master'
+            notice_message "Warning: you're using the master branch as working copy. This can
+cause trouble because when your changes are committed and you try to
+rebase on top of them, you may end up with merge errors as you are
+trying to apply patches of previous versions of your code. If you
+continue, it's wise to reset the master branch afterward."
+            return if ask("Do you want to continue with this commit? [Y/n] ") =~ /\s*^n/i
+          end
+
+          git_status = `git status --porcelain`
+          raise GitError.new("There are local changes; please commit them before continuing.") if git_status.match(/^[^\?]/)
+
           run_command("svn commit")
           success_message "commit complete!"
           if yes? "Do you want to update the mirror branch to the latest commit? [y/N] "
             on_mirror_branch do
               fetch
+              mirror_is_updated = true
+            end
+          end
+        end
+
+        if mirror_is_updated
+          local_branch = get_local_branch()
+          if local_branch == 'master'
+            if yes? "Do you want to reset the current branch to the latest commit (losing all git history)? [y/N] "
+              run_command("git checkout #{@@mirror_branch}")
+              run_command("git branch -D '#{local_branch}'")
+              run_command("git checkout -b #{local_branch}")
+              success_message "branch '#{local_branch}' reset!"
+            end
+          else
+            if yes? "Do you want to switch to master and delete the committed branch '#{local_branch}'? [y/N] "
+              run_command("git checkout master")
+              rebase
+              run_command("git branch -D '#{local_branch}'")
+              success_message "branch '#{local_branch}' deleted!"
             end
           end
         end

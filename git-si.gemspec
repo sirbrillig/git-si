@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["payton@foolord.com"]
   spec.description   = %q{Git Svn Interface: a simple git extention to use git locally with a remote svn repo.}
   spec.summary       = %q{It's like a simple version of git-svn which doesn't keep track of history locally.}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/sirbrillig/git-si"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)

@@ -29,17 +29,19 @@ This will take you into your favorite editor to enter a commit message.
 
 All commands:
 
-    git si add [FILES]     # Perform an svn and a git add on the files.
-    git si blame <FILE>    # Alias for svn blame.
-    git si commit          # Perform an svn commit and update the mirror branch.
-    git si diff [FILES]    # Perform an svn diff piped through a colorizer. Also tests to be sure a rebase is not needed.
-    git si fetch           # Updates mirror branch to latest svn commit.
-    git si help [COMMAND]  # Describe available commands or one specific command
-    git si init            # Initializes git-si in this directory with a gitignore and creates a special mirror branch.
-    git si pull            # Fetch the latest svn commit and rebase the current branch.
-    git si rebase          # Rebases current branch to mirror branch.
-    git si status [FILES]  # Perform an svn status.
-    git si usage           # How does this thing work?
+    git-si add [FILES]     # Perform an svn and a git add on the files.
+    git-si blame <FILE>    # Alias for svn blame.
+    git-si commit          # Perform an svn commit and update the mirror branch.
+    git-si diff [FILES]    # Perform an svn diff piped through a colorizer. Also tests to be sure a rebase is not needed.
+    git-si fetch           # Updates mirror branch to latest svn commit.
+    git-si help [COMMAND]  # Describe available commands or one specific command
+    git-si init            # Initializes git-si in this directory with a gitignore and creates a special mirror branch.
+    git-si pull            # Fetch the latest svn commit and rebase the current branch.
+    git-si readd           # Add files to svn that have been added to git.
+    git-si rebase          # Rebases current branch to mirror branch.
+    git-si status [FILES]  # Perform an svn status.
+    git-si usage           # How does this thing work?
+    git-si version         # Print the version.
 
 
 ## Contributing

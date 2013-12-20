@@ -29,7 +29,7 @@ module Git
 
       @@mirror_branch = 'MIRRORBRANCH'
 
-      dec "version", "Print the version."
+      desc "version", "Print the version."
       def version
         say "git-si version #{Git::Si::VERSION}"
       end

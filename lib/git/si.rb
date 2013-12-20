@@ -185,6 +185,29 @@ continue, it's wise to reset the master branch afterward."
         end
       end
 
+      desc "readd", "Add files to svn that have been added to git."
+      def readd(*args)
+        on_local_branch do
+          command = "svn status --ignore-externals"
+          svn_status = `#{command}`
+          raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
+          files_to_add = []
+          svn_status.each_line do |line|
+            case line.strip!
+            when /^X/, /\.git/, /\.swp$/
+            when /^\?\s+(\S.+)/
+              filename = $1
+              file_in_git = `git ls-files #{filename}`
+              raise GitError.new("Failed to list git files. I'm not sure why. Check for any errors above.") unless $?.success?
+              files_to_add << filename if file_in_git
+            end
+          end
+          raise SvnError.new("There are no files to add.") if files_to_add.empty?
+          command = "svn add " + files_to_add.join(' ')
+          run_command(command)
+        end
+      end
+
       desc "blame <FILE>", "Alias for svn blame."
       def blame(*args)
         on_local_branch do

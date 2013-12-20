@@ -82,6 +82,9 @@ use the commands below.
             notice_message "Could not determine last version information. This may be fine if you haven't used git-si before."
           end
 
+          notice_message "Adding any files that are not already in svn to ensure an accurate diff."
+          readd()
+
           command = "svn diff " + args.join(' ')
           notice_message "Running #{command}"
           results = `#{command}`
@@ -151,6 +154,10 @@ continue, it's wise to reset the master branch afterward."
 
           git_status = `git status --porcelain`
           raise GitError.new("There are local changes; please commit them before continuing.") if git_status.match(/^[^\?]/)
+
+          notice_message "Adding any files that are not already in svn to ensure changes are committed."
+          readd()
+
           svn_diff = `svn diff`
           raise SvnError.new("Failed to get the svn diff. I'm not sure why. Check for any errors above.") if ! $?.success?
           raise SvnError.new("There are no changes to commit.") if svn_diff.strip.empty?
@@ -186,7 +193,7 @@ continue, it's wise to reset the master branch afterward."
       end
 
       desc "readd", "Add files to svn that have been added to git."
-      def readd(*args)
+      def readd()
         on_local_branch do
           command = "svn status --ignore-externals"
           svn_status = `#{command}`
@@ -200,11 +207,18 @@ continue, it's wise to reset the master branch afterward."
               file_in_git = `git ls-files #{filename}`
               raise GitError.new("Failed to list git files. I'm not sure why. Check for any errors above.") unless $?.success?
               files_to_add << filename if file_in_git
+              say filename
             end
           end
-          raise SvnError.new("There are no files to add.") if files_to_add.empty?
-          command = "svn add " + files_to_add.join(' ')
-          run_command(command)
+          if files_to_add.empty?
+            notice_message "There are no files to add."
+            return
+          end
+          if yes? "Do you want to add the above files to svn? [y/N] ", :green
+            command = "svn add " + files_to_add.join(' ')
+            run_command(command)
+            success_message "Added files to svn that had been added to git."
+          end
         end
       end
 

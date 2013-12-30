@@ -199,25 +199,29 @@ continue, it's wise to reset the master branch afterward."
           svn_status = `#{command}`
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
           files_to_add = []
-          svn_status.each_line do |line|
-            case line.strip!
-            when /^X/, /\.git/, /\.swp$/
-            when /^\?\s+(\S.+)/
-              filename = $1
-              file_in_git = `git ls-files #{filename}`
-              raise GitError.new("Failed to list git files. I'm not sure why. Check for any errors above.") unless $?.success?
-              files_to_add << filename if file_in_git
-              say filename
+          using_stderr do
+            svn_status.each_line do |line|
+              case line.strip!
+              when /^X/, /\.git/, /\.swp$/
+              when /^\?\s+(\S.+)/
+                filename = $1
+                file_in_git = `git ls-files #{filename}`
+                raise GitError.new("Failed to list git files. I'm not sure why. Check for any errors above.") unless $?.success?
+                files_to_add << filename if file_in_git
+                say filename
+              end
             end
           end
           if files_to_add.empty?
             notice_message "There are no files to add."
             return
           end
-          if yes? "Do you want to add the above files to svn? [y/N] ", :green
-            command = "svn add " + files_to_add.join(' ')
-            run_command(command)
-            success_message "Added files to svn that had been added to git."
+          using_stderr do
+            if yes? "Do you want to add the above files to svn? [y/N] ", :green
+              command = "svn add " + files_to_add.join(' ')
+              run_command(command)
+              success_message "Added files to svn that had been added to git."
+            end
           end
         end
       end
@@ -327,6 +331,16 @@ continue, it's wise to reset the master branch afterward."
           exit false
         ensure
           run_command("git checkout #{local_branch}")
+        end
+      end
+
+      def using_stderr(&block)
+        old_stdout = $stdout
+        $stdout = $stderr
+        begin
+          yield
+        ensure
+          $stdout = old_stdout
         end
       end
 

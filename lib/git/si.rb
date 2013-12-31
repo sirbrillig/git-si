@@ -337,10 +337,12 @@ continue, it's wise to reset the master branch afterward."
       def using_stderr(&block)
         old_stdout = $stdout
         $stdout = $stderr
+        @silent = true
         begin
           yield
         ensure
           $stdout = old_stdout
+          @silent = false
         end
       end
 
@@ -357,10 +359,10 @@ continue, it's wise to reset the master branch afterward."
       end
 
       def run_command(command, options={})
-        if STDOUT.tty?
+        if STDOUT.tty? and not @silent
           run(command, options)
         else
-          run(command, options.update(verbose: false))
+          run(command, options.update(verbose: false, capture: true))
         end
         raise ShellError.new("There was an error while trying to run the command: #{command}. Look above for any errors.") unless $?.success?
       end

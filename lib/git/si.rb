@@ -255,7 +255,7 @@ continue, it's wise to reset the master branch afterward."
           end
 
           # check for existing .gitingore
-          gitignore = [".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*"]
+          gitignore = [".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*", "*.orig"]
           command = "svn status --ignore-externals "
           svn_status = `#{command}`
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?

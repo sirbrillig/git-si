@@ -207,8 +207,10 @@ continue, it's wise to reset the master branch afterward."
                 filename = $1
                 file_in_git = `git ls-files #{filename}`
                 raise GitError.new("Failed to list git files. I'm not sure why. Check for any errors above.") unless $?.success?
-                files_to_add << filename if file_in_git
-                say filename
+                if not file_in_git.empty?
+                  files_to_add << filename if file_in_git
+                  say filename
+                end
               end
             end
           end

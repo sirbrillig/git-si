@@ -77,7 +77,11 @@ use the commands below.
           results = git_log.match(/svn update to version (\d+)/i)
           last_rebased_version = results[1] if results
           if last_fetched_version and last_rebased_version
-            raise VersionError.new("This branch is out-of-date (rev #{last_rebased_version}; mirror branch is at #{last_fetched_version}). You should do a git si rebase.") if last_fetched_version != last_rebased_version
+            if last_fetched_version > last_rebased_version
+              raise VersionError.new("This branch is out-of-date (rev #{last_rebased_version}; mirror branch is at #{last_fetched_version}). You should do a git si rebase.")
+            elsif last_fetched_version < last_rebased_version
+              return if ask("This branch is newer (rev #{last_rebased_version}) than the mirror branch (rev #{last_fetched_version}). That can happen when svn changes have been made directly and may be fine. Do you want to continue? [Y/n] ", :green) =~ /\s*^n/i
+            end
           else
             notice_message "Could not determine last version information. This may be fine if you haven't used git-si before."
           end

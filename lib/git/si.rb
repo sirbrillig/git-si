@@ -120,7 +120,6 @@ use the commands below.
         on_mirror_branch do
           notice_message "Fetching remote data from svn"
           updated_files = `svn up --accept theirs-full --ignore-externals`
-          run_command("svn revert -R ./")
           files_to_add = []
           updated_files.each_line do |line|
             say line
@@ -129,13 +128,15 @@ use the commands below.
               files_to_add << '"' + $1 + '"'
             end
           end
+          notice_message "Reverting any local changes in mirror branch"
+          run_command("svn revert -R ./")
           unless files_to_add.empty?
             files_to_add.each do |filename|
-              say "Adding file: #{filename}"
+              say "Updating file in git: #{filename}"
             end
             system("git add " + files_to_add.join(' '))
-            run_command("git commit --allow-empty -am 'svn update to version #{get_svn_version}'")
           end
+          run_command("git commit --allow-empty -am 'svn update to version #{get_svn_version}'")
         end
         success_message "fetch complete!"
       end
@@ -193,10 +194,8 @@ continue, it's wise to reset the master branch afterward."
           end
 
           if files_unchanged and yes? "Do you want to update the mirror branch to the latest commit? [y/N] ", :green
-            on_mirror_branch do
-              fetch
-              mirror_is_updated = true
-            end
+            fetch
+            mirror_is_updated = true
           end
         end
 

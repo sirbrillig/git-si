@@ -123,13 +123,19 @@ use the commands below.
           run_command("svn revert -R ./")
           files_to_add = []
           updated_files.each_line do |line|
+            say line
             case line.strip!
             when /^\w\s+(\S.+)/
               files_to_add << '"' + $1 + '"'
             end
           end
-          system("git add " + files_to_add.join(' '))
-          run_command("git commit --allow-empty -am 'svn update to version #{get_svn_version}'")
+          unless files_to_add.empty?
+            files_to_add.each do |filename|
+              say "Adding file: #{filename}"
+            end
+            system("git add " + files_to_add.join(' '))
+            run_command("git commit --allow-empty -am 'svn update to version #{get_svn_version}'")
+          end
         end
         success_message "fetch complete!"
       end

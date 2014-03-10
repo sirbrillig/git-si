@@ -119,9 +119,16 @@ use the commands below.
         end
         on_mirror_branch do
           notice_message "Fetching remote data from svn"
-          run_command("svn up --accept theirs-full --ignore-externals")
+          updated_files = `svn up --accept theirs-full --ignore-externals`
           run_command("svn revert -R ./")
-          system("git add .")
+          files_to_add = []
+          updated_files.each_line do |line|
+            case line.strip!
+            when /^\w\s+(\S.+)/
+              files_to_add << '"' + $1 + '"'
+            end
+          end
+          system("git add " + files_to_add.join(' '))
           run_command("git commit --allow-empty -am 'svn update to version #{get_svn_version}'")
         end
         success_message "fetch complete!"

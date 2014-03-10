@@ -168,7 +168,18 @@ continue, it's wise to reset the master branch afterward."
 
           run_command("svn commit")
           success_message "commit complete!"
-          if yes? "Do you want to update the mirror branch to the latest commit? [y/N] ", :green
+
+          files_unchanged = true
+          git_status = `git status --porcelain`
+          files_unchanged = false if git_status.match(/^[^\?]/)
+          unless files_unchanged
+            if yes? "Some files were added or modified during the commit; should I revert them? [y/N] ", :yellow
+              run_command("git reset --hard HEAD")
+              files_unchanged = true
+            end
+          end
+
+          if files_unchanged and yes? "Do you want to update the mirror branch to the latest commit? [y/N] ", :green
             on_mirror_branch do
               fetch
               mirror_is_updated = true

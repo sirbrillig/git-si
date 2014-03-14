@@ -333,6 +333,13 @@ continue, it's wise to reset the master branch afterward."
         return nil
       end
 
+      def get_svn_root
+        svn_info = `svn info`
+        results = svn_info.match(/Root Path:\s+(.+)/)
+        return results[1] if results
+        return nil
+      end
+
       def get_local_branch
         git_branches = `git branch`
         results = git_branches.match(/^\*\s+(\S+)/)
@@ -341,9 +348,20 @@ continue, it's wise to reset the master branch afterward."
         return local_branch
       end
 
+      def in_svn_root(&block)
+        root_dir = get_svn_root
+        raise SvnError.new("Could not find the svn root directory.") unless root_dir
+        notice_message "Changing directory to svn root: #{root_dir}"
+        Dir.chdir(root_dir) do
+          yield
+        end
+      end
+
       def on_local_branch(&block)
         begin
-          yield
+          in_svn_root do
+            yield
+          end
         rescue GitSiError => err
           error_message err
           exit false
@@ -354,7 +372,9 @@ continue, it's wise to reset the master branch afterward."
         local_branch = get_local_branch()
         run_command("git checkout #{@@mirror_branch}")
         begin
-          yield
+          in_svn_root do
+            yield
+          end
         rescue GitSiError => err
           error_message err
           exit false

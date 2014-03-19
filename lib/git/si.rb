@@ -124,7 +124,7 @@ use the commands below.
           updated_files.each_line do |line|
             say line
             case line.strip!
-            when /^\w\s+(\S.+)/
+            when /^\w\s+(\S.+)/, /^Restored '(.+)'\s*$/
               files_to_add << '"' + $1 + '"'
             end
           end

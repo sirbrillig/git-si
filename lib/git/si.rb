@@ -134,7 +134,7 @@ use the commands below.
             files_to_add.each do |filename|
               say "Updating file in git: #{filename}"
             end
-            system("git add " + files_to_add.join(' '))
+            system("git add --all " + files_to_add.join(' '))
           end
           run_command("git commit --allow-empty -am 'svn update to version #{get_svn_version}'")
         end

@@ -124,7 +124,7 @@ use the commands below.
           updated_files.each_line do |line|
             say line
             case line.strip!
-            when /^\w\s+(\S.+)/, /^Restored '(.+)'\s*$/
+            when /^A\s+(\S.+)/, /^Restored '(.+)'\s*$/
               files_to_add << '"' + $1 + '"'
             end
           end
@@ -134,6 +134,7 @@ use the commands below.
             files_to_add.each do |filename|
               say "Updating file in git: #{filename}"
             end
+            notice_message "Adding all those files"
             system("git add --all " + files_to_add.join(' '))
           end
           run_command("git commit --allow-empty -am 'svn update to version #{get_svn_version}'")

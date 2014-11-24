@@ -25,6 +25,8 @@ module Git
       include Thor::Actions
       include Pager
 
+      class_option :svn, :type => :string, :desc => 'The path to the svn binary', :default => 'svn'
+
       default_task :usage
 
       @@mirror_branch = 'MIRRORBRANCH'
@@ -52,7 +54,7 @@ use the commands below.
       desc "status [FILES]", "Perform an svn status."
       def status(*args)
         on_local_branch do
-          command = "svn status --ignore-externals " + args.join(' ')
+          command = "#{options[:svn]} status --ignore-externals " + args.join(' ')
           svn_status = `#{command}`
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
           svn_status.each_line do |line|
@@ -89,7 +91,7 @@ use the commands below.
           notice_message "Adding any files that are not already in svn to ensure an accurate diff."
           readd()
 
-          command = "svn diff " + args.join(' ')
+          command = "#{options[:svn]} diff " + args.join(' ')
           notice_message "Running #{command}"
           results = `#{command}`
           if STDOUT.tty?
@@ -104,7 +106,7 @@ use the commands below.
       desc "add [FILES]", "Perform an svn and a git add on the files."
       def add(*args)
         on_local_branch do
-          command = "svn add " + args.join(' ')
+          command = "#{options[:svn]} add " + args.join(' ')
           run_command(command)
           command = "git add " + args.join(' ')
           run_command(command)
@@ -119,7 +121,7 @@ use the commands below.
         end
         on_mirror_branch do
           notice_message "Fetching remote data from svn"
-          updated_files = `svn up --accept theirs-full --ignore-externals`
+          updated_files = `#{options[:svn]} up --accept theirs-full --ignore-externals`
           files_to_add = []
           updated_files.each_line do |line|
             say line
@@ -129,7 +131,7 @@ use the commands below.
             end
           end
           notice_message "Reverting any local changes in mirror branch"
-          run_command("svn revert -R ./")
+          run_command("#{options[:svn]} revert -R ./")
           unless files_to_add.empty?
             files_to_add.each do |filename|
               say "Updating file in git: #{filename}"
@@ -177,11 +179,11 @@ continue, it's wise to reset the master branch afterward."
           notice_message "Adding any files that are not already in svn to ensure changes are committed."
           readd()
 
-          svn_diff = `svn diff`
+          svn_diff = `#{options[:svn]} diff`
           raise SvnError.new("Failed to get the svn diff. I'm not sure why. Check for any errors above.") if ! $?.success?
           raise SvnError.new("There are no changes to commit.") if svn_diff.strip.empty?
 
-          run_command("svn commit")
+          run_command("#{options[:svn]} commit")
           success_message "commit complete!"
 
           files_unchanged = true
@@ -223,7 +225,7 @@ continue, it's wise to reset the master branch afterward."
       desc "readd", "Add files to svn that have been added to git."
       def readd()
         on_local_branch do
-          command = "svn status --ignore-externals"
+          command = "#{options[:svn]} status --ignore-externals"
           svn_status = `#{command}`
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
           files_to_add = []
@@ -248,7 +250,7 @@ continue, it's wise to reset the master branch afterward."
           end
           using_stderr do
             if yes? "Do you want to add the above files to svn? [y/N] ", :green
-              command = "svn add " + files_to_add.join(' ')
+              command = "#{options[:svn]} add " + files_to_add.join(' ')
               run_command(command)
               success_message "Added files to svn that had been added to git."
             end
@@ -259,8 +261,37 @@ continue, it's wise to reset the master branch afterward."
       desc "blame <FILE>", "Alias for svn blame."
       def blame(*args)
         on_local_branch do
-          command = "svn blame " + args.join(' ')
+          command = "#{options[:svn]} blame " + args.join(' ')
           run_command(command)
+        end
+      end
+
+      desc "sync", "Synchronize git repository to files in svn"
+      def sync
+        on_local_branch do
+          command = "#{options[:svn]} ls -R"
+          all_files = `#{command}`
+          raise SvnError.new("Failed to list svn files. I'm not sure why. Check for any errors above.") unless $?.success?
+          files_to_add = []
+          using_stderr do
+            all_files.each_line do |line|
+              files_to_add << line.strip!
+              say line
+            end
+          end
+          if files_to_add.empty?
+            notice_message "There are no files to add."
+            return
+          end
+          using_stderr do
+            if yes? "Do you want to add the above files to git? [y/N] ", :green
+              files_to_add.each do |filename|
+                command = "git add " + filename
+                run_command(command)
+              end
+              success_message "Added all files to git that exist in svn."
+            end
+          end
         end
       end
 
@@ -268,7 +299,7 @@ continue, it's wise to reset the master branch afterward."
       def init
         on_local_branch do
           # check for svn repo
-          `svn info`
+          `#{options[:svn]} info`
           raise SvnError.new("No svn repository was found here. Maybe you're in the wrong directory?") unless $?.success?
           make_a_commit = false
 
@@ -283,8 +314,9 @@ continue, it's wise to reset the master branch afterward."
           end
 
           # check for existing .gitingore
+          gitignore = [".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*", "*.orig"]
           gitignore = [".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*", "*.orig", "node_modules"]
-          command = "svn status --ignore-externals "
+          command = "#{options[:svn]} status --ignore-externals "
           svn_status = `#{command}`
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
           externals = []
@@ -328,14 +360,14 @@ continue, it's wise to reset the master branch afterward."
       private
 
       def get_svn_version
-        svn_info = `svn info`
+        svn_info = `#{options[:svn]} info`
         results = svn_info.match(/^Revision:\s+(\d+)/)
         return results[1] if results
         return nil
       end
 
       def get_svn_root
-        svn_info = `svn info`
+        svn_info = `#{options[:svn]} info`
         results = svn_info.match(/Root Path:\s+(.+)/)
         return results[1] if results
         return nil

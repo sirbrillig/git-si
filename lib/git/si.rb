@@ -33,12 +33,12 @@ module Git
 
       desc "version", "Print the version."
       def version
-        say "git-si version #{Git::Si::VERSION}"
+        say Git::Si::Version.version_string
       end
 
       desc "usage", "How does this thing work?"
       def usage
-        say "git-si #{Git::Si::VERSION}
+        say "#{Git::Si::Version.version_string}
 
 Git Svn Interface: a simple git extention to use git locally with a remote svn
 repo. It's like a simple version of git-svn which doesn't keep track of history

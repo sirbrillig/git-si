@@ -1,4 +1,5 @@
 require "git/si/git-control"
+require "git/si/version"
 
 describe Git::Si::GitControl do
   describe ".status_command" do
@@ -102,11 +103,11 @@ describe Git::Si::GitControl do
   describe ".parse_last_svn_revision" do
     it "returns the correct svn version number" do
       data = "
-git-si svn update to version 1015
+git-si 0.4.0 svn update to version 1015
 
 some other commit
 
-git-si svn update to version 1014
+git-si 0.3.0 svn update to version 1014
 "
       expect(Git::Si::GitControl.parse_last_svn_revision( data )).to eq( '1015' )
     end
@@ -132,7 +133,8 @@ git-si svn update to version 1014
     end
 
     it "returns the correct command with the revision" do
-      expect( Git::Si::GitControl.commit_revision_command( 21356 ) ).to eq( "git commit --allow-empty -am 'svn update to version 21356'" )
+      version = Git::Si::Version.version
+      expect( Git::Si::GitControl.commit_revision_command( 21356 ) ).to eq( "git commit --allow-empty -am 'git-si #{version} svn update to version 21356'" )
     end
   end
 

@@ -1,3 +1,5 @@
+require "git/si/version"
+
 module Git
   module Si
     class GitControl
@@ -39,7 +41,8 @@ module Git
       end
 
       def self.commit_revision_command(revision)
-        "#{@@git_binary} commit --allow-empty -am 'svn update to version #{revision}'"
+        version = Git::Si::Version.version
+        "#{@@git_binary} commit --allow-empty -am 'git-si #{version} svn update to version #{revision}'"
       end
 
       def self.stash_command

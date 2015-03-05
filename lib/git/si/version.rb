@@ -1,6 +1,6 @@
 module Git
   module Si
-    VERSION = "0.3.1"
+    VERSION = "0.4.0"
 
     class Version
       def self.version

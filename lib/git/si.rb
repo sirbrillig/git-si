@@ -1,4 +1,6 @@
 require "git/si/version"
+require "git/si/svn"
+require "git/si/output"
 require "thor"
 require "pager"
 
@@ -54,20 +56,10 @@ use the commands below.
       desc "status [FILES]", "Perform an svn status."
       def status(*args)
         on_local_branch do
-          command = "#{options[:svn]} status --ignore-externals " + args.join(' ')
-          svn_status = `#{command}`
+          Git::Si::Svn.svn_binary = options[:svn]
+          svn_status = run_command(Git::Si::Svn.status_command(args), { :capture => true })
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
-          svn_status.each_line do |line|
-            case line.strip!
-            when /^X/, /\.git/, /\.swp$/
-            else
-              if STDOUT.tty?
-                print_colordiff line
-              else
-                say line
-              end
-            end
-          end
+          print_colordiff Git::Si::Output.svn_status( svn_status )
         end
       end
 

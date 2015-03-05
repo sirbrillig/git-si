@@ -33,12 +33,27 @@ describe Git::Si::Svn do
     end
 
     context "when a different binary is set" do
-      it "uses a different binary if one is specified" do
-        expected = "testbin status --ignore-externals"
+      before do
         Git::Si::Svn.svn_binary = "testbin"
+      end
+
+      after do
+        Git::Si::Svn.svn_binary = nil
+      end
+
+      it "uses the different binary" do
+        expected = "testbin status --ignore-externals"
         actual = Git::Si::Svn.status_command
         expect(actual).to eq(expected)
       end
+    end
+  end
+
+  describe "#info_command" do
+    it "returns the correct svn command" do
+      expected = "svn info"
+      actual = Git::Si::Svn.info_command
+      expect(actual).to eq(expected)
     end
   end
 end

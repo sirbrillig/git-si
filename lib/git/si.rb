@@ -65,8 +65,9 @@ use the commands below.
 
       desc "diff [FILES]", "Perform an svn diff piped through a colorizer. Also tests to be sure a rebase is not needed."
       def diff(*args)
+        configure
         on_local_branch do
-          last_fetched_version = get_svn_version()
+          last_fetched_version = get_svn_revision()
           git_log = `git log --pretty=%B`
           results = git_log.match(/svn update to version (\d+)/i)
           last_rebased_version = results[1] if results
@@ -131,7 +132,7 @@ use the commands below.
             notice_message "Adding all those files"
             system("git add --all " + files_to_add.join(' '))
           end
-          run_command("git commit --allow-empty -am 'svn update to version #{get_svn_version}'")
+          run_command("git commit --allow-empty -am 'svn update to version #{get_svn_revision}'")
         end
         success_message "fetch complete!"
       end
@@ -355,11 +356,9 @@ continue, it's wise to reset the master branch afterward."
         Git::Si::Svn.svn_binary = options[:svn]
       end
 
-      def get_svn_version
-        svn_info = `#{options[:svn]} info`
-        results = svn_info.match(/^Revision:\s+(\d+)/)
-        return results[1] if results
-        return nil
+      def get_svn_revision
+        svn_info = run_command(Git::Si::Svn.info_command)
+        return Git::Si::Svn.parse_last_revision(svn_info)
       end
 
       def get_svn_root

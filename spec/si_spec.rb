@@ -56,6 +56,32 @@ describe Git::Si::Svn do
       expect(actual).to eq(expected)
     end
   end
+
+  describe "#parse_last_revision" do
+    it "returns nil from incorrect data" do
+      actual = Git::Si::Svn.parse_last_revision('foobar 12345')
+      expect(actual).to be_nil
+    end
+
+    it "returns the revision number from correct data" do
+      expected = "1014"
+      data = "
+Path: .
+Working Copy Root Path: /path/place
+URL: file:///Users/path/place
+Relative URL: ^/test
+Repository Root: file:///Users/path/place
+Repository UUID: 0101010101
+Revision: 1014
+Node Kind: directory
+Schedule: normal
+Last Changed Author: me
+Last Changed Rev: 1
+"
+      actual = Git::Si::Svn.parse_last_revision(data)
+      expect(actual).to eq(expected)
+    end
+  end
 end
 
 describe Git::Si::Output do

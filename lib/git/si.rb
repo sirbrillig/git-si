@@ -55,8 +55,8 @@ use the commands below.
 
       desc "status [FILES]", "Perform an svn status."
       def status(*args)
+        configure
         on_local_branch do
-          Git::Si::Svn.svn_binary = options[:svn]
           svn_status = run_command(Git::Si::Svn.status_command(args), { :capture => true })
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
           print_colordiff Git::Si::Output.svn_status( svn_status )
@@ -350,6 +350,10 @@ continue, it's wise to reset the master branch afterward."
 
 
       private
+
+      def configure
+        Git::Si::Svn.svn_binary = options[:svn]
+      end
 
       def get_svn_version
         svn_info = `#{options[:svn]} info`

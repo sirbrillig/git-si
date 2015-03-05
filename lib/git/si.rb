@@ -433,12 +433,14 @@ continue, it's wise to reset the master branch afterward."
       end
 
       def run_command(command, options={})
+        output = ''
         if STDOUT.tty? and not @silent
-          run(command, options)
+          output = run(command, options)
         else
-          run(command, options.update(verbose: false, capture: true))
+          output = run(command, options.update(verbose: false, capture: true))
         end
         raise ShellError.new("There was an error while trying to run the command: #{command}. Look above for any errors.") unless $?.success?
+        return output
       end
 
       def print_colordiff(diff)

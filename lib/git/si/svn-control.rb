@@ -1,6 +1,6 @@
 module Git
   module Si
-    class Svn
+    class SvnControl
       @@default_svn_binary = 'svn'
       @@svn_binary = 'svn'
 

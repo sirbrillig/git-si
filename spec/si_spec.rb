@@ -1,5 +1,5 @@
 require "git/si/version"
-require "git/si/svn"
+require "git/si/svn-control"
 require "git/si/git-control"
 require "git/si/output"
 
@@ -62,32 +62,32 @@ git-si svn update to version 1014
   end
 end
 
-describe Git::Si::Svn do
+describe Git::Si::SvnControl do
   describe "#status_command" do
     it "returns the correct svn command" do
       expected = "svn status --ignore-externals"
-      actual = Git::Si::Svn.status_command
+      actual = Git::Si::SvnControl.status_command
       expect(actual).to eq(expected)
     end
 
     it "includes extra arguments if specified" do
       expected = "svn status --ignore-externals --verbose"
-      actual = Git::Si::Svn.status_command( "--verbose" )
+      actual = Git::Si::SvnControl.status_command( "--verbose" )
       expect(actual).to eq(expected)
     end
 
     context "when a different binary is set" do
       before do
-        Git::Si::Svn.svn_binary = "testbin"
+        Git::Si::SvnControl.svn_binary = "testbin"
       end
 
       after do
-        Git::Si::Svn.svn_binary = nil
+        Git::Si::SvnControl.svn_binary = nil
       end
 
       it "uses the different binary" do
         expected = "testbin status --ignore-externals"
-        actual = Git::Si::Svn.status_command
+        actual = Git::Si::SvnControl.status_command
         expect(actual).to eq(expected)
       end
     end
@@ -96,14 +96,14 @@ describe Git::Si::Svn do
   describe "#info_command" do
     it "returns the correct svn command" do
       expected = "svn info"
-      actual = Git::Si::Svn.info_command
+      actual = Git::Si::SvnControl.info_command
       expect(actual).to eq(expected)
     end
   end
 
   describe "#parse_last_revision" do
     it "returns nil from incorrect data" do
-      actual = Git::Si::Svn.parse_last_revision('foobar 12345')
+      actual = Git::Si::SvnControl.parse_last_revision('foobar 12345')
       expect(actual).to be_nil
     end
 
@@ -122,7 +122,7 @@ Schedule: normal
 Last Changed Author: me
 Last Changed Rev: 1
 "
-      actual = Git::Si::Svn.parse_last_revision(data)
+      actual = Git::Si::SvnControl.parse_last_revision(data)
       expect(actual).to eq(expected)
     end
   end

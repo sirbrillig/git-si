@@ -20,6 +20,14 @@ module Git
         "#{@@svn_binary} info"
       end
 
+      def self.diff_command(*args)
+        command = "#{@@svn_binary} diff"
+        if ( args.length > 0 )
+          command += " " + args.join(' ')
+        end
+        command
+      end
+
       def self.parse_last_revision(svn_info)
         results = svn_info.match(/^Revision:\s+(\d+)/)
         return results[1] if results

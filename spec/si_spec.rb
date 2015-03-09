@@ -93,6 +93,20 @@ describe Git::Si::SvnControl do
     end
   end
 
+  describe "#diff_command" do
+    it "returns the correct svn command" do
+      expected = "svn diff"
+      actual = Git::Si::SvnControl.diff_command
+      expect(actual).to eq(expected)
+    end
+
+    it "includes extra arguments if specified" do
+      expected = "svn diff foobar"
+      actual = Git::Si::SvnControl.diff_command( "foobar" )
+      expect(actual).to eq(expected)
+    end
+  end
+
   describe "#info_command" do
     it "returns the correct svn command" do
       expected = "svn info"

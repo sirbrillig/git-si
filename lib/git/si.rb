@@ -1,5 +1,6 @@
 require "git/si/version"
-require "git/si/svn"
+require "git/si/svn-control"
+require "git/si/git-control"
 require "git/si/output"
 require "thor"
 require "pager"
@@ -27,6 +28,7 @@ module Git
       include Thor::Actions
       include Pager
 
+      class_option :debug, :type => :boolean, :desc => 'Print lots of output', :default => false
       class_option :svn, :type => :string, :desc => 'The path to the svn binary', :default => 'svn'
 
       default_task :usage
@@ -57,7 +59,7 @@ use the commands below.
       def status(*args)
         configure
         on_local_branch do
-          svn_status = run_command(Git::Si::Svn.status_command(args), { :capture => true })
+          svn_status = run_command(Git::Si::SvnControl.status_command(args), { :capture => true })
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
           print_colordiff Git::Si::Output.svn_status( svn_status )
         end
@@ -67,32 +69,12 @@ use the commands below.
       def diff(*args)
         configure
         on_local_branch do
-          last_fetched_version = get_svn_revision()
-          git_log = `git log --pretty=%B`
-          results = git_log.match(/svn update to version (\d+)/i)
-          last_rebased_version = results[1] if results
-          if last_fetched_version and last_rebased_version
-            if last_fetched_version > last_rebased_version
-              raise VersionError.new("This branch is out-of-date (rev #{last_rebased_version}; mirror branch is at #{last_fetched_version}). You should do a git si rebase.")
-            elsif last_fetched_version < last_rebased_version
-              return if ask("This branch is newer (rev #{last_rebased_version}) than the mirror branch (rev #{last_fetched_version}). That can happen when svn changes have been made directly and may be fine. Do you want to continue? [Y/n] ", :green) =~ /\s*^n/i
-            end
-          else
-            notice_message "Could not determine last version information. This may be fine if you haven't used git-si before."
-          end
+          return if do_revisions_differ()
 
           notice_message "Adding any files that are not already in svn to ensure an accurate diff."
           readd()
 
-          command = "#{options[:svn]} diff " + args.join(' ')
-          notice_message "Running #{command}"
-          results = `#{command}`
-          if STDOUT.tty?
-            page
-            print_colordiff results
-          else
-            say results
-          end
+          print_colordiff run_command(Git::Si::SvnControl.diff_command(args), { :capture => true })
         end
       end
 
@@ -353,12 +335,19 @@ continue, it's wise to reset the master branch afterward."
       private
 
       def configure
-        Git::Si::Svn.svn_binary = options[:svn]
+        Git::Si::SvnControl.svn_binary = options[:svn]
       end
 
+      # Return the most recent svn revision number stored in git
+      def get_git_si_revision
+        info = run_command(Git::Si::GitControl.log_command('--pretty=%B'), { :capture => true })
+        return Git::Si::GitControl.parse_last_svn_revision(info)
+      end
+
+      # Return the most recent svn revision number
       def get_svn_revision
-        svn_info = run_command(Git::Si::Svn.info_command)
-        return Git::Si::Svn.parse_last_revision(svn_info)
+        svn_info = run_command(Git::Si::SvnControl.info_command, { :capture => true })
+        return Git::Si::SvnControl.parse_last_revision(svn_info)
       end
 
       def get_svn_root
@@ -435,8 +424,13 @@ continue, it's wise to reset the master branch afterward."
         $stderr.puts set_color message, :red
       end
 
+      def debug(message)
+        $stderr.puts message if options[:debug]
+      end
+
       def run_command(command, options={})
         output = ''
+        debug "run_command `#{command}`, options: #{options}"
         if STDOUT.tty? and not @silent
           output = run(command, options)
         else
@@ -446,7 +440,28 @@ continue, it's wise to reset the master branch afterward."
         return output
       end
 
+      def do_revisions_differ
+        last_fetched_version = get_svn_revision()
+        last_rebased_version = get_git_si_revision()
+
+        if ! last_fetched_version or ! last_rebased_version
+          notice_message "Could not determine last git-si version information. This may be fine if you haven't used git-si before."
+        else
+          if last_fetched_version > last_rebased_version
+            raise VersionError.new("This branch is out-of-date (svn revision #{last_rebased_version}; svn is at #{last_fetched_version}). You should do a git si rebase or git si pull.")
+          elsif last_fetched_version < last_rebased_version
+            return if ask("This branch is newer (svn revision #{last_rebased_version}) than svn (rev #{last_fetched_version}). That can happen when svn changes have been made directly and may be fine. Do you want to continue? [Y/n] ", :green) =~ /\s*^n/i
+          end
+        end
+      end
+
       def print_colordiff(diff)
+        debug "print_colordiff"
+        if ! STDOUT.tty?
+          debug "print_colordiff returning without colorizing"
+          return say diff
+        end
+        debug "print_colordiff colorizing..."
         diff.each_line do |line|
           line.rstrip!
           case line

@@ -29,6 +29,7 @@ module Git
       include Pager
 
       class_option :debug, :type => :boolean, :desc => 'Print lots of output', :default => false
+      class_option :quiet, :type => :boolean, :desc => 'Print only the minimum output', :default => false
       class_option :svn, :type => :string, :desc => 'The path to the svn binary', :default => 'svn'
 
       default_task :usage
@@ -417,7 +418,7 @@ continue, it's wise to reset the master branch afterward."
       end
 
       def notice_message(message)
-        $stderr.puts set_color message, :yellow
+        $stderr.puts set_color message, :yellow unless options[:quiet]
       end
 
       def error_message(message)

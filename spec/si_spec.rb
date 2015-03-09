@@ -1,6 +1,6 @@
 require "git/si/version"
 require "git/si/svn"
-require "git/si/git"
+require "git/si/git-control"
 require "git/si/output"
 
 describe Git::Si::Version do
@@ -41,6 +41,23 @@ describe Git::Si::GitControl do
       it "uses the different binary" do
         expect(Git::Si::GitControl.log_command).to eq("testbingit log")
       end
+    end
+  end
+
+  describe "#parse_last_svn_revision" do
+    it "returns the correct svn version number" do
+      data = "
+git-si svn update to version 1015
+
+some other commit
+
+git-si svn update to version 1014
+"
+      expect(Git::Si::GitControl.parse_last_svn_revision( data )).to eq( '1015' )
+    end
+
+    it "returns nil if no version number could be found" do
+      expect(Git::Si::GitControl.parse_last_svn_revision( 'foobar' )).to be_nil
     end
   end
 end

@@ -16,6 +16,11 @@ module Git
         command
       end
 
+      def self.parse_last_svn_revision(info)
+        results = info.match(/svn update to version (\d+)/i)
+        return results[1] if results
+      end
+
     end
   end
 end

@@ -1,5 +1,6 @@
 require "git/si/version"
 require "git/si/svn"
+require "git/si/git"
 require "git/si/output"
 
 describe Git::Si::Version do
@@ -14,6 +15,32 @@ describe Git::Si::Version do
     it "returns the correct version string" do
       version_string = "git-si version #{Git::Si::VERSION}"
       expect(Git::Si::Version.version_string).to eq(version_string)
+    end
+  end
+end
+
+describe Git::Si::GitControl do
+  describe "#log_command" do
+    it "returns the correct git command" do
+      expect( Git::Si::GitControl.log_command ).to eq( "git log" )
+    end
+
+    it "includes extra arguments if specified" do
+      expect( Git::Si::GitControl.log_command( "--pretty=%B" ) ).to eq( "git log --pretty=%B" )
+    end
+
+    context "when a different binary is set" do
+      before do
+        Git::Si::GitControl.git_binary = "testbingit"
+      end
+
+      after do
+        Git::Si::GitControl.git_binary = nil
+      end
+
+      it "uses the different binary" do
+        expect(Git::Si::GitControl.log_command).to eq("testbingit log")
+      end
     end
   end
 end

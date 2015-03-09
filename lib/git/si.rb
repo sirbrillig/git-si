@@ -1,4 +1,5 @@
 require "git/si/version"
+require "git/si/errors"
 require "git/si/svn-control"
 require "git/si/git-control"
 require "git/si/output"
@@ -8,21 +9,6 @@ require "pager"
 module Git
 
   module Si
-
-    class GitSiError < StandardError
-    end
-
-    class ShellError < GitSiError
-    end
-
-    class GitError < GitSiError
-    end
-
-    class SvnError < GitSiError
-    end
-
-    class VersionError < GitSiError
-    end
 
     class SvnInterface < Thor
       include Thor::Actions

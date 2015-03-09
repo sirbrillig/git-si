@@ -31,6 +31,7 @@ module Git
       class_option :debug, :type => :boolean, :desc => 'Print lots of output', :default => false
       class_option :quiet, :type => :boolean, :desc => 'Print only the minimum output', :default => false
       class_option :svn, :type => :string, :desc => 'The path to the svn binary', :default => 'svn'
+      class_option :git, :type => :string, :desc => 'The path to the git binary', :default => 'git'
 
       default_task :usage
 
@@ -337,6 +338,7 @@ continue, it's wise to reset the master branch afterward."
 
       def configure
         Git::Si::SvnControl.svn_binary = options[:svn]
+        Git::Si::GitControl.git_binary = options[:git]
       end
 
       # Return the most recent svn revision number stored in git

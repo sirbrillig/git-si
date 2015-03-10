@@ -85,18 +85,13 @@ use the commands below.
         on_mirror_branch do
           notice_message "Fetching remote data from svn"
           updated_files = get_command_output( Git::Si::SvnControl.update_command )
-          files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
           notice_message "Reverting any local changes in mirror branch"
           files_to_revert = Git::Si::SvnControl.parse_conflicted_files(updated_files)
           run_command(Git::Si::SvnControl.revert_command(files_to_revert)) unless files_to_revert.empty?
-          unless files_to_add.empty?
-            files_to_add.each do |filename|
-              say "Updating file in git: #{filename}"
-            end
-            notice_message "Adding all those files"
-            system("git add --all " + files_to_add.join(' '))
-          end
-          run_command("git commit --allow-empty -am 'svn update to version #{get_svn_revision}'")
+          notice_message "Updating mirror branch to match new data"
+          files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
+          run_command(Git::Si::SvnControl.add_command(files_to_add)) unless files_to_add.empty?
+          run_command( Git::Si::GitControl.commit_revision_command(get_svn_revision) )
         end
         success_message "fetch complete!"
       end

@@ -190,6 +190,16 @@ Resolved conflicted state of 'weirdthing/weird.php'
       end
     end
   end
+
+  describe "#revert_command" do
+    it "returns the correct command for all files" do
+      expect( Git::Si::SvnControl.revert_command ).to eq('svn revert -R .')
+    end
+
+    it "returns the correct command for some files" do
+      expect( Git::Si::SvnControl.revert_command(['foobar', 'barfoo']) ).to eq('svn revert -R foobar barfoo')
+    end
+  end
 end
 
 

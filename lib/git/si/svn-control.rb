@@ -59,6 +59,16 @@ module Git
         "#{@@svn_binary} up --accept theirs-full --ignore-externals"
       end
 
+      def self.revert_command(*args)
+        command = "#{@@svn_binary} revert -R"
+        if ( args.length > 0 )
+          command += " " + args.join(' ')
+        else
+          command += " ."
+        end
+        command
+      end
+
     end
   end
 end

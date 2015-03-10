@@ -20,6 +20,36 @@ describe Git::Si::Version do
 end
 
 describe Git::Si::GitControl do
+  describe "#status_command" do
+    it "returns the correct git command" do
+      expected = "git status --porcelain"
+      actual = Git::Si::GitControl.status_command
+      expect(actual).to eq(expected)
+    end
+
+    it "includes extra arguments if specified" do
+      expected = "git status --porcelain foobar"
+      actual = Git::Si::GitControl.status_command( "foobar" )
+      expect(actual).to eq(expected)
+    end
+
+    context "when a different binary is set" do
+      before do
+        Git::Si::GitControl.git_binary = "testbin"
+      end
+
+      after do
+        Git::Si::GitControl.git_binary = nil
+      end
+
+      it "uses the different binary" do
+        expected = "testbin status --porcelain"
+        actual = Git::Si::GitControl.status_command
+        expect(actual).to eq(expected)
+      end
+    end
+  end
+
   describe "#log_command" do
     it "returns the correct git command" do
       expect( Git::Si::GitControl.log_command ).to eq( "git log" )

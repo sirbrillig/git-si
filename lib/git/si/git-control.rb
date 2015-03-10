@@ -8,6 +8,14 @@ module Git
         @@git_binary = binary && binary.length > 0 ? binary : @@default_git_binary
       end
 
+      def self.status_command(*args)
+        command = "#{@@git_binary} status --porcelain"
+        if ( args.length > 0 )
+          command += " " + args.join(' ')
+        end
+        command
+      end
+
       def self.log_command(*args)
         command = "#{@@git_binary} log"
         if ( args.length > 0 )

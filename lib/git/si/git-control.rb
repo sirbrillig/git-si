@@ -34,6 +34,9 @@ module Git
         "#{@@git_binary} add " + files.join(' ')
       end
 
+      def self.are_there_changes?(status_output)
+        status_output.match(/^\s*[MAD]/)
+      end
     end
   end
 end

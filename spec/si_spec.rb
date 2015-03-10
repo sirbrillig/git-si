@@ -50,6 +50,36 @@ describe Git::Si::GitControl do
     end
   end
 
+  describe "#are_there_changes?" do
+    it "returns true if there are changes" do
+      data = "
+ M test1
+"
+      expect(Git::Si::GitControl.are_there_changes?( data )).to be_truthy
+    end
+
+    it "returns true if there are additions" do
+      data = "
+ A test1
+"
+      expect(Git::Si::GitControl.are_there_changes?( data )).to be_truthy
+    end
+
+    it "returns true if there are deletions" do
+      data = "
+ D test1
+"
+      expect(Git::Si::GitControl.are_there_changes?( data )).to be_truthy
+    end
+
+    it "returns false if there are no changes" do
+      data = "
+?? testdir/
+"
+      expect(Git::Si::GitControl.are_there_changes?( data )).to be_falsey
+    end
+  end
+
   describe "#log_command" do
     it "returns the correct git command" do
       expect( Git::Si::GitControl.log_command ).to eq( "git log" )

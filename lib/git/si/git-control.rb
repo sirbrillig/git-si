@@ -37,6 +37,10 @@ module Git
       def self.are_there_changes?(status_output)
         status_output.match(/^\s*[MAD]/)
       end
+
+      def self.commit_revision_command(revision)
+        "#{@@git_binary} commit --allow-empty -am 'svn update to version #{revision}'"
+      end
     end
   end
 end

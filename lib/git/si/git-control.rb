@@ -21,6 +21,11 @@ module Git
         return results[1] if results
       end
 
+      def self.add_command(*files)
+        raise GitSiError.new("Add command requires filenames") if ( files.length == 0 )
+        "#{@@git_binary} add " + files.join(' ')
+      end
+
     end
   end
 end

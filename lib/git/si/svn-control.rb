@@ -34,6 +34,11 @@ module Git
         return nil
       end
 
+      def self.add_command(*files)
+        raise GitSiError.new("Add command requires filenames") if ( files.length == 0 )
+        "#{@@svn_binary} add " + files.join(' ')
+      end
+
     end
   end
 end

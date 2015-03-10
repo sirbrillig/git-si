@@ -60,6 +60,16 @@ git-si svn update to version 1014
       expect(Git::Si::GitControl.parse_last_svn_revision( 'foobar' )).to be_nil
     end
   end
+
+  describe "#add_command" do
+    it "raises an error if no files are specified" do
+      expect { Git::Si::GitControl.add_command }.to raise_error
+    end
+
+    it "returns the correct command with files" do
+      expect( Git::Si::GitControl.add_command( "foobar" ) ).to eq( "git add foobar" )
+    end
+  end
 end
 
 describe Git::Si::SvnControl do
@@ -138,6 +148,16 @@ Last Changed Rev: 1
 "
       actual = Git::Si::SvnControl.parse_last_revision(data)
       expect(actual).to eq(expected)
+    end
+  end
+
+  describe "#add_command" do
+    it "raises an error if no files are specified" do
+      expect { Git::Si::SvnControl.add_command }.to raise_error
+    end
+
+    it "returns the correct command with files" do
+      expect( Git::Si::SvnControl.add_command( "foobar" ) ).to eq( "svn add foobar" )
     end
   end
 end

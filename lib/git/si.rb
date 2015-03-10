@@ -68,11 +68,10 @@ use the commands below.
 
       desc "add [FILES]", "Perform an svn and a git add on the files."
       def add(*args)
+        configure
         on_local_branch do
-          command = "#{options[:svn]} add " + args.join(' ')
-          run_command(command)
-          command = "git add " + args.join(' ')
-          run_command(command)
+          run_command(Git::Si::SvnControl.add_command(args))
+          run_command(Git::Si::GitControl.add_command(args))
         end
       end
 

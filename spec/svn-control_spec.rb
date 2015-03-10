@@ -94,6 +94,82 @@ Last Changed Rev: 1
       expect( Git::Si::SvnControl.update_command ).to eq( "svn up --accept theirs-full --ignore-externals" )
     end
   end
+
+  describe "#parse_updated_files" do
+    before do
+      @data = "
+Restored 'bin/tests/importantthing'
+A    bin/tests/foobar
+U    bin/tests/api/goobar
+G    bin/tests/api/special
+U    bin/tests/api/anotherfile
+A    bin/tests/barfoo
+D    byefile
+   C myimage.png
+D    badjs.js
+   C something/javascript.js
+   A something/newjs.js
+C    css/_base.scss
+Updated to revision 113333.
+Resolved conflicted state of 'weirdthing/weird.php'
+"
+    end
+
+    it "returns files that have been added" do
+      expected = [
+        'bin/tests/foobar',
+        'bin/tests/barfoo'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
+    end
+
+    it "returns files that have been restored" do
+      expected = [
+        'bin/tests/importantthing'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
+    end
+
+    it "returns files that are updated" do
+      expected = [
+        'bin/tests/api/goobar',
+        'bin/tests/api/special',
+        'bin/tests/api/anotherfile'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
+    end
+
+    it "returns files that are resolved conflicts" do
+      expected = [
+        'weirdthing/weird.php'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
+    end
+
+    it "does not return files that are in conflict" do
+      expected = [
+        'myimage.png',
+        'css/_base.scss',
+        'something/javascript.js'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files(@data) ).not_to include( *expected )
+    end
+
+    it "does not return files that are deleted" do
+      expected = [
+        'byefile',
+        'badjs.js'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files(@data) ).not_to include( *expected )
+    end
+
+    it "returns files whose properties have been updated" do
+      expected = [
+        'something/newjs.js'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
+    end
+  end
 end
 
 

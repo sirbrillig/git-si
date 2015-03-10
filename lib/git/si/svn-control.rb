@@ -34,6 +34,14 @@ module Git
         return nil
       end
 
+      def self.parse_updated_files(svn_update_output)
+        svn_update_output.split(/\r?\n/).collect do |line|
+          line.strip.match(Regexp.union(/^\s*[AGU]\s+(\S.+)/, /^Restored '(.+)'/, /^Resolved conflicted state of '(.+)'/)) do |pattern|
+            pattern.to_a.compact.last
+          end
+        end.compact
+      end
+
       def self.add_command(*files)
         raise GitSiError.new("Add command requires filenames") if ( files.length == 0 )
         "#{@@svn_binary} add " + files.join(' ')

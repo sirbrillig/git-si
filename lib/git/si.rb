@@ -87,8 +87,8 @@ use the commands below.
           updated_files = get_command_output( Git::Si::SvnControl.update_command )
           files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
           notice_message "Reverting any local changes in mirror branch"
-          run_command("#{options[:svn]} revert -R ./")
-          # TODO: revert any conflicted files (in status, any lines starting with C)
+          files_to_revert = Git::Si::SvnControl.parse_conflicted_files(updated_files)
+          run_command(Git::Si::SvnControl.revert_command(files_to_revert)) unless files_to_revert.empty?
           unless files_to_add.empty?
             files_to_add.each do |filename|
               say "Updating file in git: #{filename}"

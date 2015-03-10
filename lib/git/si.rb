@@ -47,7 +47,7 @@ use the commands below.
       def status(*args)
         configure
         on_local_branch do
-          svn_status = run_command(Git::Si::SvnControl.status_command(args), { :capture => true })
+          svn_status = get_command_output(Git::Si::SvnControl.status_command(args))
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
           print_colordiff Git::Si::Output.svn_status( svn_status )
         end
@@ -62,7 +62,7 @@ use the commands below.
           notice_message "Adding any files that are not already in svn to ensure an accurate diff."
           readd()
 
-          print_colordiff run_command(Git::Si::SvnControl.diff_command(args), { :capture => true })
+          print_colordiff get_command_output(Git::Si::SvnControl.diff_command(args))
         end
       end
 
@@ -77,9 +77,10 @@ use the commands below.
 
       desc "fetch", "Updates mirror branch to latest svn commit."
       def fetch
+        configure
         on_local_branch do
-          git_status = `git status --porcelain`
-          raise GitError.new("There are local changes; please commit them before continuing.") if git_status.match(/^[^\?]/)
+          # TODO: stash and restore the changes when done
+          raise GitError.new("There are local changes; please commit them before continuing.") if are_there_git_changes()
         end
         on_mirror_branch do
           notice_message "Fetching remote data from svn"
@@ -328,13 +329,13 @@ continue, it's wise to reset the master branch afterward."
 
       # Return the most recent svn revision number stored in git
       def get_git_si_revision
-        info = run_command(Git::Si::GitControl.log_command('--pretty=%B'), { :capture => true })
+        info = get_command_output(Git::Si::GitControl.log_command('--pretty=%B'))
         return Git::Si::GitControl.parse_last_svn_revision(info)
       end
 
       # Return the most recent svn revision number
       def get_svn_revision
-        svn_info = run_command(Git::Si::SvnControl.info_command, { :capture => true })
+        svn_info = get_command_output(Git::Si::SvnControl.info_command)
         return Git::Si::SvnControl.parse_last_revision(svn_info)
       end
 
@@ -428,6 +429,10 @@ continue, it's wise to reset the master branch afterward."
         return output
       end
 
+      def get_command_output(command, options={})
+        run_command(command, options.merge( capture: true ))
+      end
+
       def do_revisions_differ
         last_fetched_version = get_svn_revision()
         last_rebased_version = get_git_si_revision()
@@ -462,6 +467,10 @@ continue, it's wise to reset the master branch afterward."
           end
           say line
         end
+      end
+
+      def are_there_git_changes
+        Git::Si::GitControl.are_there_changes?( get_command_output(Git::Si::GitControl.status_command()) )
       end
 
     end

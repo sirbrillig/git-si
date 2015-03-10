@@ -84,17 +84,11 @@ use the commands below.
         end
         on_mirror_branch do
           notice_message "Fetching remote data from svn"
-          updated_files = `#{options[:svn]} up --accept theirs-full --ignore-externals`
-          files_to_add = []
-          updated_files.each_line do |line|
-            say line
-            case line.strip!
-            when /^A\s+(\S.+)/, /^Restored '(.+)'\s*$/
-              files_to_add << '"' + $1 + '"'
-            end
-          end
+          updated_files = get_command_output( Git::Si::SvnControl.update_command )
+          files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
           notice_message "Reverting any local changes in mirror branch"
           run_command("#{options[:svn]} revert -R ./")
+          # TODO: revert any conflicted files (in status, any lines starting with C)
           unless files_to_add.empty?
             files_to_add.each do |filename|
               say "Updating file in git: #{filename}"

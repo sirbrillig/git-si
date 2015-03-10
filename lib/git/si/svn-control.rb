@@ -39,6 +39,10 @@ module Git
         "#{@@svn_binary} add " + files.join(' ')
       end
 
+      def self.update_command
+        "#{@@svn_binary} up --accept theirs-full --ignore-externals"
+      end
+
     end
   end
 end

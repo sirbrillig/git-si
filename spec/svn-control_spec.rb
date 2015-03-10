@@ -88,6 +88,12 @@ Last Changed Rev: 1
       expect( Git::Si::SvnControl.add_command( "foobar" ) ).to eq( "svn add foobar" )
     end
   end
+
+  describe "#update_command" do
+    it "returns the correct command" do
+      expect( Git::Si::SvnControl.update_command ).to eq( "svn up --accept theirs-full --ignore-externals" )
+    end
+  end
 end
 
 

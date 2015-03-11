@@ -213,4 +213,14 @@ git-si svn update to version 1014
       expect(Git::Si::GitControl.hard_reset_command).to eq( "git reset --hard HEAD" )
     end
   end
+
+  describe "#list_file_command" do
+    it "raises an error if no filename is specified" do
+      expect { Git::Si::GitControl.list_file_command}.to raise_error
+    end
+
+    it "returns the correct command" do
+      expect(Git::Si::GitControl.list_file_command('foobar')).to eq( "git ls-files foobar" )
+    end
+  end
 end

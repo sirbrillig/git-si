@@ -82,6 +82,12 @@ module Git
       def self.hard_reset_command
         "#{@@git_binary} reset --hard HEAD"
       end
+
+      def self.list_file_command(filename)
+        raise GitSiError.new("List file command requires filename") if filename.empty?
+        "#{@@git_binary} ls-files #{filename}"
+      end
+
     end
   end
 end

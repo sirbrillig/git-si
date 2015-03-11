@@ -57,6 +57,7 @@ use the commands below.
       def status(*args)
         configure
         on_local_branch do
+          return if do_revisions_differ()
           svn_status = get_command_output(Git::Si::SvnControl.status_command(args))
           print_colordiff Git::Si::Output.svn_status( svn_status )
         end
@@ -436,12 +437,15 @@ continue, it's wise to reset the master branch afterward."
 
         if ! last_fetched_version or ! last_rebased_version
           notice_message "Could not determine last git-si version information. This may be fine if you haven't used git-si before."
-        else
-          if last_fetched_version > last_rebased_version
-            raise VersionError.new("This branch is out-of-date (svn revision #{last_rebased_version}; svn is at #{last_fetched_version}). You should do a git si rebase or git si pull.")
-          elsif last_fetched_version < last_rebased_version
-            return if ask("This branch is newer (svn revision #{last_rebased_version}) than svn (rev #{last_fetched_version}). That can happen when svn changes have been made directly and may be fine. Do you want to continue? [Y/n] ", :green) =~ /\s*^n/i
-          end
+          return
+        end
+
+        debug "comparing last fetched revision #{last_fetched_version} and last rebased revision #{last_rebased_version}"
+
+        if last_fetched_version > last_rebased_version
+          raise VersionError.new("This branch is out-of-date (svn revision #{last_rebased_version}; svn is at #{last_fetched_version}). You should do a git si rebase or git si pull.")
+        elsif last_fetched_version < last_rebased_version
+          return true if ask("This branch is newer (svn revision #{last_rebased_version}) than svn (rev #{last_fetched_version}). That can happen when svn changes have been made directly and may be fine. Do you want to continue? [Y/n] ", :green) =~ /\s*^n/i
         end
       end
 

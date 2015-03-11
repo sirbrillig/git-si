@@ -109,9 +109,11 @@ use the commands below.
           notice_message "Fetching remote data from svn"
           updated_files = get_command_output( Git::Si::SvnControl.update_command )
           notice_message "Reverting any local changes in mirror branch"
+          run_command(Git::Si::SvnControl.revert_command)
           files_to_revert = Git::Si::SvnControl.parse_conflicted_files(updated_files)
-          run_command(Git::Si::SvnControl.revert_command(files_to_revert)) unless files_to_revert.empty?
-          run_command(Git::Si::SvnControl.revert_command('.'))
+          files_to_revert.each do |filename|
+            run_command(Git::Si::SvnControl.revert_command(filename))
+          end
           notice_message "Updating mirror branch to match new data"
           files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
           files_to_add.each do |filename|

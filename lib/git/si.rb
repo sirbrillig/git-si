@@ -253,38 +253,6 @@ continue, it's wise to reset the master branch afterward."
       end
 
       ################
-      # Action: sync
-      ################
-      desc "sync", "Synchronize git repository to files in svn"
-      def sync
-        on_local_branch do
-          command = "#{options[:svn]} ls -R"
-          all_files = `#{command}`
-          raise SvnError.new("Failed to list svn files. I'm not sure why. Check for any errors above.") unless $?.success?
-          files_to_add = []
-          using_stderr do
-            all_files.each_line do |line|
-              files_to_add << line.strip!
-              say line
-            end
-          end
-          if files_to_add.empty?
-            notice_message "There are no files to add."
-            return
-          end
-          using_stderr do
-            if yes? "Do you want to add the above files to git? [y/N] ", :green
-              files_to_add.each do |filename|
-                command = "git add " + filename
-                run_command(command)
-              end
-              success_message "Added all files to git that exist in svn."
-            end
-          end
-        end
-      end
-
-      ################
       # Action: init
       ################
       desc "init", "Initializes git-si in this directory with a gitignore and creates a special mirror branch."

@@ -60,6 +60,11 @@ module Git
         "#{@@git_binary} checkout #{branch}"
       end
 
+      def self.create_branch_command(branch)
+        raise GitSiError.new("New branch command requires branch name") if branch.empty?
+        "#{@@git_binary} branch #{branch}"
+      end
+
       def self.branch_command
         "#{@@git_binary} branch"
       end

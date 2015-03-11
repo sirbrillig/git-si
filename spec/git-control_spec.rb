@@ -150,11 +150,21 @@ git-si svn update to version 1014
 
   describe "#rebase_command" do
     it "raises an error if no branch is specified" do
-      expect { Git::Si::GitControl.rebase_command}.to raise_error
+      expect { Git::Si::GitControl.rebase_command }.to raise_error
     end
 
     it "returns the correct command with the branch" do
       expect( Git::Si::GitControl.rebase_command( 'master' ) ).to eq( "git rebase 'master'" )
+    end
+  end
+
+  describe "#create_branch_command" do
+    it "returns the correct command" do
+      expect(Git::Si::GitControl.create_branch_command('foo')).to eq( "git branch foo" )
+    end
+
+    it "raises an error if no branch is specified" do
+      expect { Git::Si::GitControl.create_branch_command }.to raise_error
     end
   end
 

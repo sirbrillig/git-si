@@ -97,6 +97,11 @@ module Git
         "#{@@git_binary} show-ref refs/heads/#{branch}"
       end
 
+      def self.delete_command(filename)
+        raise GitSiError.new("Remove file command requires filename") if filename.empty?
+        "#{@@git_binary} rm #{filename}"
+      end
+
     end
   end
 end

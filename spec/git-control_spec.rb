@@ -239,4 +239,14 @@ git-si svn update to version 1014
       expect( Git::Si::GitControl.show_branch_command( 'master' ) ).to eq( "git show-ref refs/heads/master" )
     end
   end
+
+  describe "#delete_command" do
+    it "raises an error if no filename is specified" do
+      expect { Git::Si::GitControl.delete_command }.to raise_error
+    end
+
+    it "returns the correct command" do
+      expect(Git::Si::GitControl.delete_command('foobar')).to eq( "git rm foobar" )
+    end
+  end
 end

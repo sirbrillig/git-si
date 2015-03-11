@@ -177,37 +177,33 @@ continue, it's wise to reset the master branch afterward."
 
       desc "readd", "Add files to svn that have been added to git."
       def readd()
+        configure
         on_local_branch do
-          command = "#{options[:svn]} status --ignore-externals"
-          svn_status = `#{command}`
+          svn_status = get_command_output(Git::Si::SvnControl.status_command(args))
           raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
+
           files_to_add = []
           using_stderr do
-            svn_status.each_line do |line|
-              case line.strip!
-              when /^X/, /\.git/, /\.swp$/
-              when /^\?\s+(\S.+)/
-                filename = $1
-                file_in_git = `git ls-files #{filename}`
-                raise GitError.new("Failed to list git files. I'm not sure why. Check for any errors above.") unless $?.success?
-                if not file_in_git.empty?
-                  files_to_add << filename if file_in_git
-                  say filename
-                end
+            Git::Si::SvnControl.parse_unknown_files(svn_status).each do |filename|
+              if not get_command_output( Git::Si::GitControl.list_file_command(filename) ).empty?
+                files_to_add << filename
+                say filename
               end
             end
           end
+
           if files_to_add.empty?
             notice_message "There are no files to add."
             return
           end
+
           using_stderr do
             if yes? "Do you want to add the above files to svn? [y/N] ", :green
-              command = "#{options[:svn]} add " + files_to_add.join(' ')
-              run_command(command)
+              run_command(Git::Si::SvnControl.add_command(files_to_add))
               success_message "Added files to svn that had been added to git."
             end
           end
+
         end
       end
 

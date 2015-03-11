@@ -102,7 +102,7 @@ module Git
 
       def self.parse_file_list(list_output)
         list_output.split(/\r?\n/).collect do |filename|
-          filename if filename !~ /\/$/
+          filename.strip if filename.strip !~ Regexp.union( /\/$/, /^\./, /\/\./ ) and not filename.empty?
         end.compact
       end
 

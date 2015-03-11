@@ -270,29 +270,49 @@ Revision: 1432
   end
 
   describe "#parse_file_list" do
-    it "returns files in the list" do
-      data = "
+    before do
+      @data = "
+.hiddenfile
+.hiddendir/
+.hiddendir/regularfile.txt
 myimage.png
 something/
+something/.subhidden/
+something/.subhidden/regularfile.txt
 something/javascript.js
 "
+    end
+
+    it "returns files in the list" do
       expected = [
         'myimage.png',
         'something/javascript.js'
       ]
-      expect( Git::Si::SvnControl.parse_file_list(data) ).to include( *expected )
+      expect( Git::Si::SvnControl.parse_file_list(@data) ).to include( *expected )
     end
 
     it "does not return directories" do
-      data = "
-myimage.png
-something/
-something/javascript.js
-"
       expected = [
         'something/'
       ]
-      expect( Git::Si::SvnControl.parse_file_list(data) ).not_to include( *expected )
+      expect( Git::Si::SvnControl.parse_file_list(@data) ).not_to include( *expected )
+    end
+
+    it "does not return empty strings" do
+      expected = [
+        '',
+        ' ',
+      ]
+      expect( Git::Si::SvnControl.parse_file_list(@data) ).not_to include( *expected )
+    end
+
+    it "does not return hidden files or files in hidden directories" do
+      expected = [
+        '.hiddenfile',
+        '.hiddendir/regularfile.txt',
+        'something/.subhidden/regularfile.txt'
+      ]
+      expect( Git::Si::SvnControl.parse_file_list(@data) ).not_to include( *expected )
     end
   end
 end

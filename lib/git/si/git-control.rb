@@ -54,6 +54,15 @@ module Git
         raise GitSiError.new("Rebase command requires branch name") if branch.empty?
         "#{@@git_binary} rebase '#{branch}'"
       end
+
+      def self.branch_command
+        "#{@@git_binary} branch"
+      end
+
+      def self.parse_current_branch(git_branches)
+        results = git_branches.match(/^\*\s+(\S+)/)
+        return results[1] if results
+      end
     end
   end
 end

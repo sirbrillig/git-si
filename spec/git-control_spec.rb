@@ -143,4 +143,24 @@ git-si svn update to version 1014
       expect( Git::Si::GitControl.rebase_command( 'master' ) ).to eq( "git rebase 'master'" )
     end
   end
+
+  describe "#branch_command" do
+    it "returns the correct command" do
+      expect(Git::Si::GitControl.branch_command).to eq( "git branch" )
+    end
+  end
+
+  describe "#parse_current_branch" do
+    it "returns the correct branch" do
+      data = "
+  MIRRORBRANCH
+* master
+"
+      expect(Git::Si::GitControl.parse_current_branch( data )).to eq( 'master' )
+    end
+
+    it "returns nil if no branch could be found" do
+      expect(Git::Si::GitControl.parse_current_branch( 'foobar' )).to be_nil
+    end
+  end
 end

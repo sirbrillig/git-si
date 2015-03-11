@@ -100,6 +100,12 @@ module Git
         "#{@@svn_binary} list -R"
       end
 
+      def self.parse_file_list(list_output)
+        list_output.split(/\r?\n/).collect do |filename|
+          filename if filename !~ /\/$/
+        end.compact
+      end
+
     end
   end
 end

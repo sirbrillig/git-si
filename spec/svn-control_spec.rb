@@ -268,6 +268,33 @@ Revision: 1432
       expect( Git::Si::SvnControl.list_file_command ).to eq( 'svn list -R' )
     end
   end
+
+  describe "#parse_file_list" do
+    it "returns files in the list" do
+      data = "
+myimage.png
+something/
+something/javascript.js
+"
+      expected = [
+        'myimage.png',
+        'something/javascript.js'
+      ]
+      expect( Git::Si::SvnControl.parse_file_list(data) ).to include( *expected )
+    end
+
+    it "does not return directories" do
+      data = "
+myimage.png
+something/
+something/javascript.js
+"
+      expected = [
+        'something/'
+      ]
+      expect( Git::Si::SvnControl.parse_file_list(data) ).not_to include( *expected )
+    end
+  end
 end
 
 

@@ -217,8 +217,10 @@ continue, it's wise to reset the master branch afterward."
           using_stderr do
             Git::Si::SvnControl.parse_unknown_files(svn_status).each do |filename|
               if not get_command_output( Git::Si::GitControl.list_file_command(filename) ).empty?
-                files_to_add << filename
-                say filename
+                if filename != '.gitignore'
+                  files_to_add << filename
+                  say filename
+                end
               end
             end
           end
@@ -303,7 +305,7 @@ continue, it's wise to reset the master branch afterward."
             make_a_commit = true
           end
 
-          # check for existing .gitingore
+          # check for existing .gitignore
           gitignore = [".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*", "*.orig", "node_modules"]
           svn_status = get_command_output(Git::Si::SvnControl.status_command)
           externals = []

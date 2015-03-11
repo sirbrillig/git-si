@@ -114,6 +114,10 @@ use the commands below.
           files_to_revert.each do |filename|
             run_command(Git::Si::SvnControl.revert_command(filename))
           end
+          files_to_delete = Git::Si::SvnControl.parse_updated_files(updated_files)
+          files_to_delete.each do |filename|
+            run_command(Git::Si::GitControl.delete_command(filename))
+          end
           notice_message "Updating mirror branch to match new data"
           files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
           files_to_add.each do |filename|

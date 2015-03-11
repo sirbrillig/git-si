@@ -177,6 +177,16 @@ Resolved conflicted state of 'weirdthing/weird.php'
       end
     end
 
+    describe "#parse_deleted_files" do
+      it "does not return files that are deleted" do
+        expected = [
+          'byefile',
+          'badjs.js'
+        ]
+        expect( Git::Si::SvnControl.parse_deleted_files(@data) ).to include( *expected )
+      end
+    end
+
     describe "#parse_conflicted_files" do
       it "returns files that are resolved conflicts" do
         expected = [

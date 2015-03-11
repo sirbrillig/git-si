@@ -48,6 +48,14 @@ module Git
         end.compact
       end
 
+      def self.parse_deleted_files(svn_update_output)
+        svn_update_output.split(/\r?\n/).collect do |line|
+          line.strip.match(Regexp.union(/^\s*D\s+(\S.+)/)) do |pattern|
+            pattern.to_a.compact.last
+          end
+        end.compact
+      end
+
       def self.parse_conflicted_files(svn_update_output)
         svn_update_output.split(/\r?\n/).collect do |line|
           line.strip.match(Regexp.union(/^\s*C\s+(\S.+)/, /^Resolved conflicted state of '(.+)'/)) do |pattern|

@@ -1,7 +1,7 @@
 require "git/si/svn-control"
 
 describe Git::Si::SvnControl do
-  describe "#status_command" do
+  describe ".status_command" do
     it "returns the correct svn command" do
       expected = "svn status --ignore-externals"
       actual = Git::Si::SvnControl.status_command
@@ -31,7 +31,7 @@ describe Git::Si::SvnControl do
     end
   end
 
-  describe "#diff_command" do
+  describe ".diff_command" do
     it "returns the correct svn command" do
       expected = "svn diff"
       actual = Git::Si::SvnControl.diff_command
@@ -45,7 +45,7 @@ describe Git::Si::SvnControl do
     end
   end
 
-  describe "#info_command" do
+  describe ".info_command" do
     it "returns the correct svn command" do
       expected = "svn info"
       actual = Git::Si::SvnControl.info_command
@@ -53,7 +53,7 @@ describe Git::Si::SvnControl do
     end
   end
 
-  describe "#parse_last_revision" do
+  describe ".parse_last_revision" do
     it "returns nil from incorrect data" do
       actual = Git::Si::SvnControl.parse_last_revision('foobar 12345')
       expect(actual).to be_nil
@@ -79,7 +79,7 @@ Last Changed Rev: 1
     end
   end
 
-  describe "#add_command" do
+  describe ".add_command" do
     it "raises an error if no files are specified" do
       expect { Git::Si::SvnControl.add_command }.to raise_error
     end
@@ -93,7 +93,7 @@ Last Changed Rev: 1
     end
   end
 
-  describe "#update_command" do
+  describe ".update_command" do
     it "returns the correct command" do
       expect( Git::Si::SvnControl.update_command ).to eq( "svn up --accept theirs-full --ignore-externals" )
     end
@@ -120,7 +120,7 @@ Resolved conflicted state of 'weirdthing/weird.php'
 "
     end
 
-    describe "#parse_updated_files" do
+    describe ".parse_updated_files" do
       it "returns files that have been added" do
         expected = [
           'bin/tests/foobar',
@@ -177,7 +177,7 @@ Resolved conflicted state of 'weirdthing/weird.php'
       end
     end
 
-    describe "#parse_deleted_files" do
+    describe ".parse_deleted_files" do
       it "does not return files that are deleted" do
         expected = [
           'byefile',
@@ -187,7 +187,7 @@ Resolved conflicted state of 'weirdthing/weird.php'
       end
     end
 
-    describe "#parse_conflicted_files" do
+    describe ".parse_conflicted_files" do
       it "returns files that are resolved conflicts" do
         expected = [
           'weirdthing/weird.php'
@@ -205,7 +205,7 @@ Resolved conflicted state of 'weirdthing/weird.php'
       end
     end
 
-    describe "#parse_unknown_files" do
+    describe ".parse_unknown_files" do
       it "returns files that are not tracked" do
         expected = [
           'unknownfile.md'
@@ -224,7 +224,7 @@ Resolved conflicted state of 'weirdthing/weird.php'
     end
   end
 
-  describe "#revert_command" do
+  describe ".revert_command" do
     it "returns the correct command for all files" do
       expect( Git::Si::SvnControl.revert_command ).to eq('svn revert -R .')
     end
@@ -234,7 +234,7 @@ Resolved conflicted state of 'weirdthing/weird.php'
     end
   end
 
-  describe "#commit_command" do
+  describe ".commit_command" do
     it "returns the correct command for all files" do
       expect( Git::Si::SvnControl.commit_command ).to eq('svn commit')
     end
@@ -244,7 +244,7 @@ Resolved conflicted state of 'weirdthing/weird.php'
     end
   end
 
-  describe "#blame_command" do
+  describe ".blame_command" do
     it "raises an error with no files" do
       expect { Git::Si::SvnControl.blame_command }.to raise_error
     end
@@ -254,7 +254,7 @@ Resolved conflicted state of 'weirdthing/weird.php'
     end
   end
 
-  describe "#parse_root_path" do
+  describe ".parse_root_path" do
     it "raises an error with no data" do
       expect { Git::Si::SvnControl.parse_root_path }.to raise_error
     end
@@ -273,13 +273,13 @@ Revision: 1432
     end
   end
 
-  describe "#list_file_command" do
+  describe ".list_file_command" do
     it "returns the correct command" do
       expect( Git::Si::SvnControl.list_file_command ).to eq( 'svn list -R' )
     end
   end
 
-  describe "#parse_file_list" do
+  describe ".parse_file_list" do
     before do
       @data = "
 .hiddenfile

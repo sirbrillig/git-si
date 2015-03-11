@@ -1,7 +1,7 @@
 require "git/si/output"
 
 describe Git::Si::Output do
-  describe "#svn_status" do
+  describe ".svn_status" do
     context "with typical output" do
       output = "Z foobar
 X foobar

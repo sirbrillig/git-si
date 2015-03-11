@@ -1,7 +1,7 @@
 require "git/si/git-control"
 
 describe Git::Si::GitControl do
-  describe "#status_command" do
+  describe ".status_command" do
     it "returns the correct git command" do
       expected = "git status --porcelain"
       actual = Git::Si::GitControl.status_command
@@ -31,7 +31,7 @@ describe Git::Si::GitControl do
     end
   end
 
-  describe "#are_there_changes?" do
+  describe ".are_there_changes?" do
     it "returns true if there are changes" do
       data = "
  M test1
@@ -75,7 +75,7 @@ describe Git::Si::GitControl do
     end
   end
 
-  describe "#log_command" do
+  describe ".log_command" do
     it "returns the correct git command" do
       expect( Git::Si::GitControl.log_command ).to eq( "git log" )
     end
@@ -99,7 +99,7 @@ describe Git::Si::GitControl do
     end
   end
 
-  describe "#parse_last_svn_revision" do
+  describe ".parse_last_svn_revision" do
     it "returns the correct svn version number" do
       data = "
 git-si svn update to version 1015
@@ -116,7 +116,7 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#add_command" do
+  describe ".add_command" do
     it "raises an error if no files are specified" do
       expect { Git::Si::GitControl.add_command }.to raise_error
     end
@@ -126,7 +126,7 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#commit_revision_command" do
+  describe ".commit_revision_command" do
     it "raises an error if no version is specified" do
       expect { Git::Si::GitControl.commit_revision_command }.to raise_error
     end
@@ -136,19 +136,19 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#stash_command" do
+  describe ".stash_command" do
     it "returns the correct command" do
       expect(Git::Si::GitControl.stash_command).to eq( "git stash" )
     end
   end
 
-  describe "#unstash_command" do
+  describe ".unstash_command" do
     it "returns the correct command" do
       expect(Git::Si::GitControl.unstash_command).to eq( "git stash pop" )
     end
   end
 
-  describe "#rebase_command" do
+  describe ".rebase_command" do
     it "raises an error if no branch is specified" do
       expect { Git::Si::GitControl.rebase_command }.to raise_error
     end
@@ -158,7 +158,7 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#create_branch_command" do
+  describe ".create_branch_command" do
     it "returns the correct command" do
       expect(Git::Si::GitControl.create_branch_command('foo')).to eq( "git branch foo" )
     end
@@ -168,7 +168,7 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#delete_branch_command" do
+  describe ".delete_branch_command" do
     it "returns the correct command" do
       expect(Git::Si::GitControl.delete_branch_command('foo')).to eq( "git branch -D foo" )
     end
@@ -178,13 +178,13 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#branch_command" do
+  describe ".branch_command" do
     it "returns the correct command" do
       expect(Git::Si::GitControl.branch_command).to eq( "git branch" )
     end
   end
 
-  describe "#parse_current_branch" do
+  describe ".parse_current_branch" do
     it "returns the correct branch" do
       data = "
   MIRRORBRANCH
@@ -198,7 +198,7 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#checkout_command" do
+  describe ".checkout_command" do
     it "raises an error if no branch is specified" do
       expect { Git::Si::GitControl.checkout_command }.to raise_error
     end
@@ -208,13 +208,13 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#hard_reset_command" do
+  describe ".hard_reset_command" do
     it "returns the correct command" do
       expect(Git::Si::GitControl.hard_reset_command).to eq( "git reset --hard HEAD" )
     end
   end
 
-  describe "#list_file_command" do
+  describe ".list_file_command" do
     it "raises an error if no filename is specified" do
       expect { Git::Si::GitControl.list_file_command }.to raise_error
     end
@@ -224,13 +224,13 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#init_command" do
+  describe ".init_command" do
     it "returns the correct command" do
       expect( Git::Si::GitControl.init_command ).to eq( "git init" )
     end
   end
 
-  describe "#show_branch_command" do
+  describe ".show_branch_command" do
     it "raises an error if no branch is specified" do
       expect { Git::Si::GitControl.show_branch_command }.to raise_error
     end
@@ -240,7 +240,7 @@ git-si svn update to version 1014
     end
   end
 
-  describe "#delete_command" do
+  describe ".delete_command" do
     it "raises an error if no filename is specified" do
       expect { Git::Si::GitControl.delete_command }.to raise_error
     end

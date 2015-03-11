@@ -133,4 +133,14 @@ git-si svn update to version 1014
       expect(Git::Si::GitControl.unstash_command).to eq( "git stash pop" )
     end
   end
+
+  describe "#rebase_command" do
+    it "raises an error if no branch is specified" do
+      expect { Git::Si::GitControl.rebase_command}.to raise_error
+    end
+
+    it "returns the correct command with the branch" do
+      expect( Git::Si::GitControl.rebase_command( 'master' ) ).to eq( "git rebase 'master'" )
+    end
+  end
 end

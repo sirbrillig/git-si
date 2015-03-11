@@ -49,6 +49,11 @@ module Git
       def self.unstash_command
         "#{@@git_binary} stash pop"
       end
+
+      def self.rebase_command(branch)
+        raise GitSiError.new("Rebase command requires branch name") if branch.empty?
+        "#{@@git_binary} rebase '#{branch}'"
+      end
     end
   end
 end

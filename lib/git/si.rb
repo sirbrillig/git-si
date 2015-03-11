@@ -23,6 +23,13 @@ module Git
 
       @@mirror_branch = 'MIRRORBRANCH'
 
+      ##################
+      # Action functions
+      ##################
+
+      ################
+      # Action: version
+      ################
       desc "version", "Print the version."
       def version
         say Git::Si::Version.version_string
@@ -43,6 +50,9 @@ use the commands below.
         help
       end
 
+      ################
+      # Action: status
+      ################
       desc "status [FILES]", "Perform an svn status."
       def status(*args)
         configure
@@ -53,6 +63,9 @@ use the commands below.
         end
       end
 
+      ################
+      # Action: status
+      ################
       desc "diff [FILES]", "Perform an svn diff piped through a colorizer. Also tests to be sure a rebase is not needed."
       def diff(*args)
         configure
@@ -66,6 +79,9 @@ use the commands below.
         end
       end
 
+      ################
+      # Action: add
+      ################
       desc "add [FILES]", "Perform an svn and a git add on the files."
       def add(*args)
         configure
@@ -75,6 +91,9 @@ use the commands below.
         end
       end
 
+      ################
+      # Action: fetch
+      ################
       desc "fetch", "Updates mirror branch to latest svn commit."
       def fetch
         configure
@@ -104,6 +123,9 @@ use the commands below.
         success_message "fetch complete!"
       end
 
+      ################
+      # Action: rebase
+      ################
       desc "rebase", "Rebases current branch to mirror branch."
       def rebase
         configure
@@ -113,12 +135,18 @@ use the commands below.
         end
       end
 
+      ################
+      # Action: pull
+      ################
       desc "pull", "Fetch the latest svn commit and rebase the current branch."
       def pull
         fetch
         rebase
       end
 
+      ################
+      # Action: commit
+      ################
       desc "commit", "Perform an svn commit and update the mirror branch."
       def commit
         configure
@@ -175,6 +203,9 @@ continue, it's wise to reset the master branch afterward."
         end
       end
 
+      ################
+      # Action: readd
+      ################
       desc "readd", "Add files to svn that have been added to git."
       def readd()
         configure
@@ -207,6 +238,9 @@ continue, it's wise to reset the master branch afterward."
         end
       end
 
+      ################
+      # Action: blame
+      ################
       desc "blame <FILE>", "Alias for svn blame."
       def blame(*args)
         on_local_branch do
@@ -214,6 +248,9 @@ continue, it's wise to reset the master branch afterward."
         end
       end
 
+      ################
+      # Action: sync
+      ################
       desc "sync", "Synchronize git repository to files in svn"
       def sync
         on_local_branch do
@@ -243,6 +280,9 @@ continue, it's wise to reset the master branch afterward."
         end
       end
 
+      ################
+      # Action: init
+      ################
       desc "init", "Initializes git-si in this directory with a gitignore and creates a special mirror branch."
       def init
         on_local_branch do
@@ -306,6 +346,9 @@ continue, it's wise to reset the master branch afterward."
       end
 
 
+      ##################
+      # Helper functions
+      ##################
       private
 
       def configure

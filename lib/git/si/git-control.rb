@@ -35,7 +35,7 @@ module Git
       end
 
       def self.are_there_changes?(status_output)
-        status_output.match(/^\s*[MAD]/)
+        status_output.match(/^\s*[MADRC]/)
       end
 
       def self.commit_revision_command(revision)

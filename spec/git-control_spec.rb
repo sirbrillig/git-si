@@ -53,6 +53,20 @@ describe Git::Si::GitControl do
       expect(Git::Si::GitControl.are_there_changes?( data )).to be_truthy
     end
 
+    it "returns true if there are renamed files" do
+      data = "
+ R test1
+"
+      expect(Git::Si::GitControl.are_there_changes?( data )).to be_truthy
+    end
+
+    it "returns true if there are copied files" do
+      data = "
+ C test1
+"
+      expect(Git::Si::GitControl.are_there_changes?( data )).to be_truthy
+    end
+
     it "returns false if there are no changes" do
       data = "
 ?? testdir/

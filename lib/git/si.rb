@@ -121,6 +121,7 @@ use the commands below.
 
       desc "commit", "Perform an svn commit and update the mirror branch."
       def commit
+        configure
         mirror_is_updated = false
 
         on_local_branch do
@@ -346,9 +347,8 @@ continue, it's wise to reset the master branch afterward."
       end
 
       def get_local_branch
-        git_branches = `git branch`
-        results = git_branches.match(/^\*\s+(\S+)/)
-        local_branch = results[1] if results
+        git_branches = get_command_output(Git::Si::GitControl.branch_command)
+        local_branch = Git::Si::GitControl.parse_current_branch(git_branches)
         raise GitError.new("Could not find local branch name.") unless local_branch
         return local_branch
       end
@@ -375,7 +375,7 @@ continue, it's wise to reset the master branch afterward."
 
       def on_mirror_branch(&block)
         local_branch = get_local_branch()
-        run_command("git checkout #{@@mirror_branch}")
+        run_command( Git::Si::GitControl.checkout_command(@@mirror_branch) )
         begin
           in_svn_root do
             yield
@@ -384,7 +384,7 @@ continue, it's wise to reset the master branch afterward."
           error_message err
           exit false
         ensure
-          run_command("git checkout #{local_branch}")
+          run_command( Git::Si::GitControl.checkout_command(local_branch) )
         end
       end
 

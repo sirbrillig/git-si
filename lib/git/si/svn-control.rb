@@ -34,6 +34,12 @@ module Git
         return nil
       end
 
+      def self.parse_root_path(svn_info)
+        results = svn_info.match(/Root Path:\s+(.+)/)
+        return results[1] if results
+        return nil
+      end
+
       def self.parse_updated_files(svn_update_output)
         svn_update_output.split(/\r?\n/).collect do |line|
           line.strip.match(Regexp.union(/^\s*[AGU]\s+(\S.+)/, /^Restored '(.+)'/, /^Resolved conflicted state of '(.+)'/)) do |pattern|

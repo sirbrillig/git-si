@@ -243,6 +243,25 @@ Resolved conflicted state of 'weirdthing/weird.php'
       expect( Git::Si::SvnControl.blame_command('foobar') ).to eq( 'svn blame foobar' )
     end
   end
+
+  describe "#parse_root_path" do
+    it "raises an error with no data" do
+      expect { Git::Si::SvnControl.parse_root_path }.to raise_error
+    end
+
+    it "returns the correct root path" do
+      data = "
+Path: .
+Working Copy Root Path: /Users/foobar/git-si/testdir/test-copy
+URL: file:///Users/foobar/git-si/testdir/SVNrep/test
+Relative URL: ^/test
+Repository Root: file:///Users/foobar/git-si/testdir/SVNrep
+Repository UUID: 0101010101
+Revision: 1432
+"
+      expect( Git::Si::SvnControl.parse_root_path(data) ).to eq( '/Users/foobar/git-si/testdir/test-copy' )
+    end
+  end
 end
 
 

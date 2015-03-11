@@ -243,6 +243,7 @@ continue, it's wise to reset the master branch afterward."
       ################
       desc "blame <FILE>", "Alias for svn blame."
       def blame(*args)
+        configure
         on_local_branch do
           run_command(Git::Si::SvnControl.blame_command(args))
         end
@@ -285,9 +286,10 @@ continue, it's wise to reset the master branch afterward."
       ################
       desc "init", "Initializes git-si in this directory with a gitignore and creates a special mirror branch."
       def init
+        configure
         on_local_branch do
           # check for svn repo
-          `#{options[:svn]} info`
+          run_command(Git::Si::SvnControl.info_command)
           raise SvnError.new("No svn repository was found here. Maybe you're in the wrong directory?") unless $?.success?
           make_a_commit = false
 
@@ -296,17 +298,14 @@ continue, it's wise to reset the master branch afterward."
             notice_message "Looks like a git repository already exists here."
           else
             notice_message "Initializing git repository"
-            `git init`
+            run_command(Git::Si::GitControl.init_command)
             raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless $?.success?
             make_a_commit = true
           end
 
           # check for existing .gitingore
-          gitignore = [".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*", "*.orig"]
           gitignore = [".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*", "*.orig", "node_modules"]
-          command = "#{options[:svn]} status --ignore-externals "
-          svn_status = `#{command}`
-          raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
+          svn_status = get_command_output(Git::Si::SvnControl.status_command)
           externals = []
           svn_status.each_line do |line|
             externals << $1 if line.strip.match(/^X\s+(\S.+)/)
@@ -320,25 +319,28 @@ continue, it's wise to reset the master branch afterward."
           else
             notice_message "Creating gitignore file."
             create_file('.gitignore', gitignore)
-            run_command("git add .gitignore")
+            run_command( Git::Si::GitControl.add_command('.gitignore') )
             make_a_commit = true
           end
 
           # make initial commit
           if make_a_commit
             notice_message "Making initial commit."
-            run_command("git add .")
-            run_command("git commit -am 'initial commit by git-si'")
+            run_command( Git::Si::GitControl.add_command('.') )
             run_command( Git::Si::GitControl.commit_revision_command(get_svn_revision) )
           end
 
           # check for exiting mirror branch
-          `git show-ref refs/heads/#{@@mirror_branch}`
+          begin
+            run_command( Git::Si::GitControl.show_branch_command(@@mirror_branch) )
+          rescue
+            # no problem. It just means the branch does not exist.
+          end
           if $?.success?
             notice_message "Looks like the mirror branch already exists here."
           else
             notice_message "Creating mirror branch '#{@@mirror_branch}'."
-            run_command("git branch '#{@@mirror_branch}'")
+            run_command( Git::Si::GitControl.create_branch_command(@@mirror_branch) )
           end
 
           success_message "init complete!"
@@ -369,10 +371,8 @@ continue, it's wise to reset the master branch afterward."
       end
 
       def get_svn_root
-        svn_info = `#{options[:svn]} info`
-        results = svn_info.match(/Root Path:\s+(.+)/)
-        return results[1] if results
-        return nil
+        svn_info = get_command_output(Git::Si::SvnControl.info_command)
+        return Git::Si::SvnControl.parse_root_path(svn_info)
       end
 
       def get_local_branch

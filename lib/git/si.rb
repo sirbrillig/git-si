@@ -210,8 +210,7 @@ continue, it's wise to reset the master branch afterward."
       desc "blame <FILE>", "Alias for svn blame."
       def blame(*args)
         on_local_branch do
-          command = "#{options[:svn]} blame " + args.join(' ')
-          run_command(command)
+          run_command(Git::Si::SvnControl.blame_command(args))
         end
       end
 

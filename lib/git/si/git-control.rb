@@ -88,6 +88,10 @@ module Git
         "#{@@git_binary} ls-files #{filename}"
       end
 
+      def self.init_command
+        "#{@@git_binary} init"
+      end
+
     end
   end
 end

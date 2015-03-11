@@ -223,4 +223,10 @@ git-si svn update to version 1014
       expect(Git::Si::GitControl.list_file_command('foobar')).to eq( "git ls-files foobar" )
     end
   end
+
+  describe "#init_command" do
+    it "returns the correct command" do
+      expect( Git::Si::GitControl.init_command ).to eq( "git init" )
+    end
+  end
 end

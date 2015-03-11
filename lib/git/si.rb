@@ -139,7 +139,17 @@ use the commands below.
       def rebase
         configure
         on_local_branch do
+          stashed_changes = false
+          if are_there_git_changes?
+            notice_message "Preserving uncommitted changed files"
+            stashed_changes = true
+            run_command(Git::Si::GitControl.stash_command)
+          end
           run_command(Git::Si::GitControl.rebase_command(@@mirror_branch))
+          if (stashed_changes)
+            notice_message "Restoring uncommitted changed files"
+            run_command(Git::Si::GitControl.unstash_command)
+          end
           success_message "rebase complete!"
         end
       end

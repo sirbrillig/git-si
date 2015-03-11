@@ -96,6 +96,10 @@ module Git
         command
       end
 
+      def self.list_file_command
+        "#{@@svn_binary} list -R"
+      end
+
     end
   end
 end

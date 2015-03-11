@@ -262,6 +262,12 @@ Revision: 1432
       expect( Git::Si::SvnControl.parse_root_path(data) ).to eq( '/Users/foobar/git-si/testdir/test-copy' )
     end
   end
+
+  describe "#list_file_command" do
+    it "returns the correct command" do
+      expect( Git::Si::SvnControl.list_file_command ).to eq( 'svn list -R' )
+    end
+  end
 end
 
 

@@ -306,9 +306,9 @@ continue, it's wise to reset the master branch afterward."
           else
             notice_message "Creating gitignore file."
             create_file('.gitignore', gitignore)
-            run_command( Git::Si::GitControl.add_command('.gitignore') )
             make_a_commit = true
           end
+          run_command( Git::Si::GitControl.add_command('.gitignore') )
 
           # make initial commit
           if make_a_commit

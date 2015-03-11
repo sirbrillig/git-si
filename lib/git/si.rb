@@ -160,15 +160,16 @@ continue, it's wise to reset the master branch afterward."
         if local_branch == 'master'
           if yes? "Do you want to reset the master branch to the latest commit (**losing all git history**)? [y/N] ", :green
             run_command(Git::Si::GitControl.checkout_command(@@mirror_branch))
-            run_command("git branch -D master")
-            run_command("git checkout -b master")
+            run_command(Git::Si::GitControl.delete_branch_command( 'master' ))
+            run_command(Git::Si::GitControl.create_branch_command( 'master' ))
+            run_command(Git::Si::GitControl.checkout_command('master'))
             success_message "master branch reset!"
           end
         else
           if yes? "Do you want to switch to the master branch and delete the committed branch '#{local_branch}'? [y/N] ", :green
             run_command(Git::Si::GitControl.checkout_command('master'))
             rebase
-            run_command("git branch -D '#{local_branch}'")
+            run_command(Git::Si::GitControl.delete_branch_command(local_branch))
             success_message "branch '#{local_branch}' deleted!"
           end
         end

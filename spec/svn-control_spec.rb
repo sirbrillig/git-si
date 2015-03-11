@@ -233,6 +233,16 @@ Resolved conflicted state of 'weirdthing/weird.php'
       expect( Git::Si::SvnControl.commit_command(['foobar', 'barfoo']) ).to eq('svn commit foobar barfoo')
     end
   end
+
+  describe "#blame_command" do
+    it "raises an error with no files" do
+      expect { Git::Si::SvnControl.blame_command }.to raise_error
+    end
+
+    it "returns the correct command" do
+      expect( Git::Si::SvnControl.blame_command('foobar') ).to eq( 'svn blame foobar' )
+    end
+  end
 end
 
 

@@ -63,6 +63,11 @@ module Git
         "#{@@svn_binary} add " + files.join(' ')
       end
 
+      def self.blame_command(*files)
+        raise GitSiError.new("Blame command requires filenames") if ( files.length == 0 )
+        "#{@@svn_binary} blame " + files.join(' ')
+      end
+
       def self.update_command
         "#{@@svn_binary} up --accept theirs-full --ignore-externals"
       end

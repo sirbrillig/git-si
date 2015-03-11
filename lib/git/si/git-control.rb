@@ -41,6 +41,14 @@ module Git
       def self.commit_revision_command(revision)
         "#{@@git_binary} commit --allow-empty -am 'svn update to version #{revision}'"
       end
+
+      def self.stash_command
+        "#{@@git_binary} stash"
+      end
+
+      def self.unstash_command
+        "#{@@git_binary} stash pop"
+      end
     end
   end
 end

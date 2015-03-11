@@ -121,4 +121,16 @@ git-si svn update to version 1014
       expect( Git::Si::GitControl.commit_revision_command( 21356 ) ).to eq( "git commit --allow-empty -am 'svn update to version 21356'" )
     end
   end
+
+  describe "#stash_command" do
+    it "returns the correct command" do
+      expect(Git::Si::GitControl.stash_command).to eq( "git stash" )
+    end
+  end
+
+  describe "#unstash_command" do
+    it "returns the correct command" do
+      expect(Git::Si::GitControl.unstash_command).to eq( "git stash pop" )
+    end
+  end
 end

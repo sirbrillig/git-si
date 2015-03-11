@@ -114,7 +114,13 @@ use the commands below.
           run_command(Git::Si::SvnControl.revert_command('.'))
           notice_message "Updating mirror branch to match new data"
           files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
-          run_command(Git::Si::SvnControl.add_command(files_to_add)) unless files_to_add.empty?
+          files_to_add.each do |filename|
+            begin
+              run_command(Git::Si::SvnControl.add_command(filename))
+            rescue
+              # an error here is not worth it to stop the process.
+            end
+          end
           run_command( Git::Si::GitControl.commit_revision_command(get_svn_revision) )
         end
         if (stashed_changes)
@@ -299,7 +305,11 @@ continue, it's wise to reset the master branch afterward."
             all_svn_files = Git::Si::SvnControl.parse_file_list( get_command_output( Git::Si::SvnControl.list_file_command ) )
             raise GitSiError.new("No files could be found in the svn repository.") if all_svn_files.empty?
             all_svn_files.each do |filename|
-              run_command( Git::Si::GitControl.add_command(filename) )
+              begin
+                run_command( Git::Si::GitControl.add_command(filename) )
+              rescue
+                # errors here are not important enough to stop the whole process
+              end
             end
 
             run_command( Git::Si::GitControl.commit_revision_command(get_svn_revision) )

@@ -84,8 +84,12 @@ Last Changed Rev: 1
       expect { Git::Si::SvnControl.add_command }.to raise_error
     end
 
-    it "returns the correct command with files" do
+    it "returns the correct command with a file" do
       expect( Git::Si::SvnControl.add_command( "foobar" ) ).to eq( "svn add foobar" )
+    end
+
+    it "returns the correct command with an array of files" do
+      expect( Git::Si::SvnControl.add_command( ["foobar", "barfoo"] ) ).to eq( "svn add foobar barfoo" )
     end
   end
 

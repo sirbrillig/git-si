@@ -106,8 +106,9 @@ use the commands below.
 
       desc "rebase", "Rebases current branch to mirror branch."
       def rebase
+        configure
         on_local_branch do
-          run_command("git rebase '#{@@mirror_branch}'")
+          run_command(Git::Si::GitControl.rebase_command(@@mirror_branch))
           success_message "rebase complete!"
         end
       end

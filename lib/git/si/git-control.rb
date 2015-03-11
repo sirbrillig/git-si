@@ -65,6 +65,11 @@ module Git
         "#{@@git_binary} branch #{branch}"
       end
 
+      def self.delete_branch_command(branch)
+        raise GitSiError.new("Delete branch command requires branch name") if branch.empty?
+        "#{@@git_binary} branch -D #{branch}"
+      end
+
       def self.branch_command
         "#{@@git_binary} branch"
       end

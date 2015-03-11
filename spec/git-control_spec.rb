@@ -168,6 +168,16 @@ git-si svn update to version 1014
     end
   end
 
+  describe "#delete_branch_command" do
+    it "returns the correct command" do
+      expect(Git::Si::GitControl.delete_branch_command('foo')).to eq( "git branch -D foo" )
+    end
+
+    it "raises an error if no branch is specified" do
+      expect { Git::Si::GitControl.delete_branch_command}.to raise_error
+    end
+  end
+
   describe "#branch_command" do
     it "returns the correct command" do
       expect(Git::Si::GitControl.branch_command).to eq( "git branch" )

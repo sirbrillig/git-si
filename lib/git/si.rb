@@ -80,7 +80,7 @@ use the commands below.
         configure
         stashed_changes = false
         on_local_branch do
-          if are_there_git_changes()
+          if are_there_git_changes?
             notice_message "Preserving uncommitted changed files"
             stashed_changes = true
             run_command(Git::Si::GitControl.stash_command)
@@ -122,64 +122,54 @@ use the commands below.
       desc "commit", "Perform an svn commit and update the mirror branch."
       def commit
         configure
-        mirror_is_updated = false
 
         on_local_branch do
           local_branch = get_local_branch()
           if local_branch == 'master'
             notice_message "Warning: you're using the master branch as working copy. This can
-cause trouble because when your changes are committed and you try to
-rebase on top of them, you may end up with merge errors as you are
+cause trouble because when your changes are committed and we try to
+rebase on top of them, you may end up with merge errors as we are
 trying to apply patches of previous versions of your code. If you
 continue, it's wise to reset the master branch afterward."
             return if ask("Do you want to continue with this commit? [Y/n] ", :green) =~ /\s*^n/i
           end
 
-          git_status = `git status --porcelain`
-          raise GitError.new("There are local changes; please commit them before continuing.") if git_status.match(/^[^\?]/)
+          raise GitError.new("There are local changes; please commit them before continuing.") if are_there_git_changes?
 
           notice_message "Adding any files that are not already in svn to ensure changes are committed."
           readd()
 
-          svn_diff = `#{options[:svn]} diff`
+          svn_diff = get_command_output(Git::Si::SvnControl.diff_command)
           raise SvnError.new("Failed to get the svn diff. I'm not sure why. Check for any errors above.") if ! $?.success?
           raise SvnError.new("There are no changes to commit.") if svn_diff.strip.empty?
 
-          run_command("#{options[:svn]} commit")
+          run_command(Git::Si::SvnControl.commit_command)
           success_message "commit complete!"
 
-          files_unchanged = true
-          git_status = `git status --porcelain`
-          files_unchanged = false if git_status.match(/^[^\?]/)
-          unless files_unchanged
+          if Git::Si::GitControl.are_there_changes?( get_command_output(Git::Si::GitControl.status_command()) )
             if yes? "Some files were added or modified during the commit; should I revert them? [y/N] ", :yellow
-              run_command("git reset --hard HEAD")
-              files_unchanged = true
+              run_command(Git::Si::GitControl.hard_reset_command)
             end
-          end
-
-          if files_unchanged and yes? "Do you want to update the mirror branch to the latest commit? [y/N] ", :green
-            fetch
-            mirror_is_updated = true
           end
         end
 
-        if mirror_is_updated
-          local_branch = get_local_branch()
-          if local_branch == 'master'
-            if yes? "Do you want to reset the current branch to the latest commit (losing all git history)? [y/N] ", :green
-              run_command("git checkout #{@@mirror_branch}")
-              run_command("git branch -D '#{local_branch}'")
-              run_command("git checkout -b #{local_branch}")
-              success_message "branch '#{local_branch}' reset!"
-            end
-          else
-            if yes? "Do you want to switch to master and delete the committed branch '#{local_branch}'? [y/N] ", :green
-              run_command("git checkout master")
-              rebase
-              run_command("git branch -D '#{local_branch}'")
-              success_message "branch '#{local_branch}' deleted!"
-            end
+        notice_message "Updating mirror branch to latest commit"
+        fetch
+
+        local_branch = get_local_branch()
+        if local_branch == 'master'
+          if yes? "Do you want to reset the master branch to the latest commit (**losing all git history**)? [y/N] ", :green
+            run_command(Git::Si::GitControl.checkout_command(@@mirror_branch))
+            run_command("git branch -D master")
+            run_command("git checkout -b master")
+            success_message "master branch reset!"
+          end
+        else
+          if yes? "Do you want to switch to the master branch and delete the committed branch '#{local_branch}'? [y/N] ", :green
+            run_command(Git::Si::GitControl.checkout_command('master'))
+            rebase
+            run_command("git branch -D '#{local_branch}'")
+            success_message "branch '#{local_branch}' deleted!"
           end
         end
       end
@@ -468,7 +458,7 @@ continue, it's wise to reset the master branch afterward."
         end
       end
 
-      def are_there_git_changes
+      def are_there_git_changes?
         Git::Si::GitControl.are_there_changes?( get_command_output(Git::Si::GitControl.status_command()) )
       end
 

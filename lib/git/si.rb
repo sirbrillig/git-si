@@ -296,7 +296,7 @@ continue, it's wise to reset the master branch afterward."
           if make_a_commit
             notice_message "Making initial commit."
 
-            all_svn_files = get_command_output( Git::Si::SvnControl.list_file_command ).split(/\r?\n/)
+            all_svn_files = Git::Si::SvnControl.parse_file_list( get_command_output( Git::Si::SvnControl.list_file_command ) )
             raise GitSiError.new("No files could be found in the svn repository.") if all_svn_files.empty?
             all_svn_files.each do |filename|
               run_command( Git::Si::GitControl.add_command(filename) )

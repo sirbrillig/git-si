@@ -69,6 +69,14 @@ module Git
         command
       end
 
+      def self.commit_command(*args)
+        command = "#{@@svn_binary} commit"
+        if ( args.length > 0 )
+          command += " " + args.join(' ')
+        end
+        command
+      end
+
     end
   end
 end

@@ -293,6 +293,7 @@ continue, it's wise to reset the master branch afterward."
             notice_message "Making initial commit."
             run_command("git add .")
             run_command("git commit -am 'initial commit by git-si'")
+            run_command( Git::Si::GitControl.commit_revision_command(get_svn_revision) )
           end
 
           # check for exiting mirror branch

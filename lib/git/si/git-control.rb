@@ -68,6 +68,10 @@ module Git
         results = git_branches.match(/^\*\s+(\S+)/)
         return results[1] if results
       end
+
+      def self.hard_reset_command
+        "#{@@git_binary} reset --hard HEAD"
+      end
     end
   end
 end

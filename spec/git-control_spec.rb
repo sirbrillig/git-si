@@ -187,4 +187,10 @@ git-si svn update to version 1014
       expect( Git::Si::GitControl.checkout_command( 'master' ) ).to eq( "git checkout master" )
     end
   end
+
+  describe "#hard_reset_command" do
+    it "returns the correct command" do
+      expect(Git::Si::GitControl.hard_reset_command).to eq( "git reset --hard HEAD" )
+    end
+  end
 end

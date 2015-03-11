@@ -163,4 +163,14 @@ git-si svn update to version 1014
       expect(Git::Si::GitControl.parse_current_branch( 'foobar' )).to be_nil
     end
   end
+
+  describe "#checkout_command" do
+    it "raises an error if no branch is specified" do
+      expect { Git::Si::GitControl.checkout_command}.to raise_error
+    end
+
+    it "returns the correct command with the branch" do
+      expect( Git::Si::GitControl.checkout_command( 'master' ) ).to eq( "git checkout master" )
+    end
+  end
 end

@@ -55,6 +55,11 @@ module Git
         "#{@@git_binary} rebase '#{branch}'"
       end
 
+      def self.checkout_command(branch)
+        raise GitSiError.new("Checkout command requires branch name") if branch.empty?
+        "#{@@git_binary} checkout #{branch}"
+      end
+
       def self.branch_command
         "#{@@git_binary} branch"
       end

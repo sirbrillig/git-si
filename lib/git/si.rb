@@ -78,9 +78,13 @@ use the commands below.
       desc "fetch", "Updates mirror branch to latest svn commit."
       def fetch
         configure
+        stashed_changes = false
         on_local_branch do
-          # TODO: stash and restore the changes when done
-          raise GitError.new("There are local changes; please commit them before continuing.") if are_there_git_changes()
+          if are_there_git_changes()
+            notice_message "Preserving uncommitted changed files"
+            stashed_changes = true
+            run_command(Git::Si::GitControl.stash_command)
+          end
         end
         on_mirror_branch do
           notice_message "Fetching remote data from svn"
@@ -92,6 +96,10 @@ use the commands below.
           files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
           run_command(Git::Si::SvnControl.add_command(files_to_add)) unless files_to_add.empty?
           run_command( Git::Si::GitControl.commit_revision_command(get_svn_revision) )
+        end
+        if (stashed_changes)
+          notice_message "Restoring uncommitted changed files"
+          run_command(Git::Si::GitControl.unstash_command)
         end
         success_message "fetch complete!"
       end

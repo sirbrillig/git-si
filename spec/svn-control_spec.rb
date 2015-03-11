@@ -104,6 +104,7 @@ U    bin/tests/api/goobar
 G    bin/tests/api/special
 U    bin/tests/api/anotherfile
 A    bin/tests/barfoo
+?    unknownfile.md
 D    byefile
    C myimage.png
 D    badjs.js
@@ -187,6 +188,24 @@ Resolved conflicted state of 'weirdthing/weird.php'
           'something/javascript.js'
         ]
         expect( Git::Si::SvnControl.parse_conflicted_files(@data) ).to include( *expected )
+      end
+    end
+
+    describe "#parse_unknown_files" do
+      it "returns files that are not tracked" do
+        expected = [
+          'unknownfile.md'
+        ]
+        expect( Git::Si::SvnControl.parse_unknown_files(@data) ).to include( *expected )
+      end
+
+      it "does not return files that are tracked" do
+        expected = [
+          'myimage.png',
+          'css/_base.scss',
+          'something/javascript.js'
+        ]
+        expect( Git::Si::SvnControl.parse_unknown_files(@data) ).not_to include( *expected )
       end
     end
   end

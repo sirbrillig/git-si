@@ -111,6 +111,7 @@ use the commands below.
           notice_message "Reverting any local changes in mirror branch"
           files_to_revert = Git::Si::SvnControl.parse_conflicted_files(updated_files)
           run_command(Git::Si::SvnControl.revert_command(files_to_revert)) unless files_to_revert.empty?
+          run_command(Git::Si::SvnControl.revert_command('.'))
           notice_message "Updating mirror branch to match new data"
           files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
           run_command(Git::Si::SvnControl.add_command(files_to_add)) unless files_to_add.empty?

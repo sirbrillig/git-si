@@ -58,7 +58,6 @@ use the commands below.
         configure
         on_local_branch do
           svn_status = get_command_output(Git::Si::SvnControl.status_command(args))
-          raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
           print_colordiff Git::Si::Output.svn_status( svn_status )
         end
       end
@@ -169,7 +168,6 @@ continue, it's wise to reset the master branch afterward."
           readd()
 
           svn_diff = get_command_output(Git::Si::SvnControl.diff_command)
-          raise SvnError.new("Failed to get the svn diff. I'm not sure why. Check for any errors above.") if ! $?.success?
           raise SvnError.new("There are no changes to commit.") if svn_diff.strip.empty?
 
           run_command(Git::Si::SvnControl.commit_command)
@@ -212,7 +210,6 @@ continue, it's wise to reset the master branch afterward."
         configure
         on_local_branch do
           svn_status = get_command_output(Git::Si::SvnControl.status_command(args))
-          raise SvnError.new("Failed to get the svn status. I'm not sure why. Check for any errors above.") if ! $?.success?
 
           files_to_add = []
           using_stderr do
@@ -260,7 +257,7 @@ continue, it's wise to reset the master branch afterward."
         configure
         on_local_branch do
           # check for svn repo
-          run_command(Git::Si::SvnControl.info_command)
+          run_command(Git::Si::SvnControl.info_command, {:allow_errors => true})
           raise SvnError.new("No svn repository was found here. Maybe you're in the wrong directory?") unless $?.success?
           make_a_commit = false
 
@@ -269,7 +266,7 @@ continue, it's wise to reset the master branch afterward."
             notice_message "Looks like a git repository already exists here."
           else
             notice_message "Initializing git repository"
-            run_command(Git::Si::GitControl.init_command)
+            run_command(Git::Si::GitControl.init_command, {:allow_errors => true})
             raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless $?.success?
             make_a_commit = true
           end
@@ -342,8 +339,10 @@ continue, it's wise to reset the master branch afterward."
       end
 
       def get_svn_root
-        svn_info = get_command_output(Git::Si::SvnControl.info_command)
-        return Git::Si::SvnControl.parse_root_path(svn_info)
+        svn_info = get_command_output(Git::Si::SvnControl.info_command, {:allow_errors => true})
+        root_dir = Git::Si::SvnControl.parse_root_path(svn_info)
+        raise SvnError.new("Could not find the svn root directory.") unless root_dir
+        root_dir
       end
 
       def get_local_branch
@@ -355,7 +354,6 @@ continue, it's wise to reset the master branch afterward."
 
       def in_svn_root(&block)
         root_dir = get_svn_root
-        raise SvnError.new("Could not find the svn root directory.") unless root_dir
         notice_message "Changing directory to svn root: #{root_dir}"
         Dir.chdir(root_dir) do
           yield
@@ -424,7 +422,7 @@ continue, it's wise to reset the master branch afterward."
         else
           output = run(command, options.update(verbose: false, capture: true))
         end
-        raise ShellError.new("There was an error while trying to run the command: #{command}. Look above for any errors.") unless $?.success?
+        raise ShellError.new("There was an error while trying to run the command: #{command}. Look above for any errors.") if not options[:allow_errors] and not $?.success?
         return output
       end
 

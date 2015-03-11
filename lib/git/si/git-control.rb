@@ -92,6 +92,11 @@ module Git
         "#{@@git_binary} init"
       end
 
+      def self.show_branch_command(branch)
+        raise GitSiError.new("Show branch command requires branch name") if branch.empty?
+        "#{@@git_binary} show-ref refs/heads/#{branch}"
+      end
+
     end
   end
 end

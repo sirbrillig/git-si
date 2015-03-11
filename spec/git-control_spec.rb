@@ -128,7 +128,7 @@ git-si svn update to version 1014
 
   describe "#commit_revision_command" do
     it "raises an error if no version is specified" do
-      expect { Git::Si::GitControl.commit_revision_command}.to raise_error
+      expect { Git::Si::GitControl.commit_revision_command }.to raise_error
     end
 
     it "returns the correct command with the revision" do
@@ -174,7 +174,7 @@ git-si svn update to version 1014
     end
 
     it "raises an error if no branch is specified" do
-      expect { Git::Si::GitControl.delete_branch_command}.to raise_error
+      expect { Git::Si::GitControl.delete_branch_command }.to raise_error
     end
   end
 
@@ -200,7 +200,7 @@ git-si svn update to version 1014
 
   describe "#checkout_command" do
     it "raises an error if no branch is specified" do
-      expect { Git::Si::GitControl.checkout_command}.to raise_error
+      expect { Git::Si::GitControl.checkout_command }.to raise_error
     end
 
     it "returns the correct command with the branch" do
@@ -216,7 +216,7 @@ git-si svn update to version 1014
 
   describe "#list_file_command" do
     it "raises an error if no filename is specified" do
-      expect { Git::Si::GitControl.list_file_command}.to raise_error
+      expect { Git::Si::GitControl.list_file_command }.to raise_error
     end
 
     it "returns the correct command" do
@@ -227,6 +227,16 @@ git-si svn update to version 1014
   describe "#init_command" do
     it "returns the correct command" do
       expect( Git::Si::GitControl.init_command ).to eq( "git init" )
+    end
+  end
+
+  describe "#show_branch_command" do
+    it "raises an error if no branch is specified" do
+      expect { Git::Si::GitControl.show_branch_command }.to raise_error
+    end
+
+    it "returns the correct command with the branch" do
+      expect( Git::Si::GitControl.show_branch_command( 'master' ) ).to eq( "git show-ref refs/heads/master" )
     end
   end
 end

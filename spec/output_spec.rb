@@ -1,9 +1,8 @@
 require "git/si/output"
 
 describe Git::Si::Output do
-  describe ".svn_status" do
-    context "with typical output" do
-      output = "Z foobar
+  context "with typical output" do
+    output = "Z foobar
 X foobar
 M foobar.git
 M foobar.swp
@@ -12,7 +11,21 @@ A something
 D something else
 ? whatever
 "
+    describe ".parse_external_repos" do
+      it "includes lines beginning with 'X'" do
+        expected = [ 'foobar' ]
+        actual = Git::Si::Output.parse_external_repos(output)
+        expect(actual).to include(*expected)
+      end
 
+      it "excludes lines starting with 'M'" do
+        expected = [ 'barfoo' ]
+        actual = Git::Si::Output.parse_external_repos(output)
+        expect(actual).not_to include(expected)
+      end
+    end
+
+    describe ".svn_status" do
       it "excludes lines beginning with 'X'" do
         expected = /X foobar/
         actual = Git::Si::Output.svn_status(output)

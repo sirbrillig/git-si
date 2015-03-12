@@ -110,18 +110,18 @@ use the commands below.
           notice_message "Fetching remote data from svn"
           updated_files = get_command_output( Git::Si::SvnControl.update_command )
           notice_message "Reverting any local changes in mirror branch"
+          # revert everything, but sometimes that doesn't work, so revert conflicts too.
           run_command(Git::Si::SvnControl.revert_command)
-          files_to_revert = Git::Si::SvnControl.parse_conflicted_files(updated_files)
-          files_to_revert.each do |filename|
+          Git::Si::SvnControl.parse_conflicted_files(updated_files).each do |filename|
             run_command(Git::Si::SvnControl.revert_command(filename))
           end
-          files_to_delete = Git::Si::SvnControl.parse_deleted_files(updated_files)
-          files_to_delete.each do |filename|
+          # delete deleted files.
+          Git::Si::SvnControl.parse_deleted_files(updated_files).each do |filename|
             run_command(Git::Si::GitControl.delete_command(filename))
           end
           notice_message "Updating mirror branch to match new data"
-          files_to_add = Git::Si::SvnControl.parse_updated_files(updated_files)
-          files_to_add.each do |filename|
+          # add updated files
+          Git::Si::SvnControl.parse_updated_files(updated_files).each do |filename|
             begin
               run_command(Git::Si::GitControl.add_command(filename))
             rescue
@@ -513,7 +513,11 @@ continue, it's wise to reset the master branch afterward."
         notice_message "Adding all files present in the svn repository."
         all_svn_files = Git::Si::SvnControl.parse_file_list( get_command_output( Git::Si::SvnControl.list_file_command ) )
         raise GitSiError.new("No files could be found in the svn repository.") if all_svn_files.empty?
-        all_svn_files.each_slice(10) do |batch|
+        batch_add_files_to_git( all_svn_files )
+      end
+
+      def batch_add_files_to_git( filenames )
+        filenames.each_slice(10) do |batch|
           begin
             run_command( Git::Si::GitControl.add_command( batch ) )
           rescue

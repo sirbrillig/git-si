@@ -295,7 +295,7 @@ continue, it's wise to reset the master branch afterward."
           end
 
           # check for existing .gitignore
-          gitignore = [".*", ".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*", "*.orig", "node_modules"]
+          gitignore = [".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*", "*.orig", "node_modules"]
           svn_status = get_command_output(Git::Si::SvnControl.status_command)
           externals = []
           svn_status.each_line do |line|

@@ -513,11 +513,11 @@ continue, it's wise to reset the master branch afterward."
         notice_message "Adding all files present in the svn repository."
         all_svn_files = Git::Si::SvnControl.parse_file_list( get_command_output( Git::Si::SvnControl.list_file_command ) )
         raise GitSiError.new("No files could be found in the svn repository.") if all_svn_files.empty?
-        all_svn_files.each_slice(8) do |batch|
+        all_svn_files.each_slice(10) do |batch|
           begin
             run_command( Git::Si::GitControl.add_command( batch ) )
           rescue
-            # try to batch the files but do them individually if there is an error
+            # try to batch the files but add them individually if there is an error
             add_files_to_git( batch )
           end
         end

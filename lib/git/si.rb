@@ -283,72 +283,23 @@ continue, it's wise to reset the master branch afterward."
           # check for svn repo
           run_command(Git::Si::SvnControl.info_command, {:allow_errors => true})
           raise SvnError.new("No svn repository was found here. Maybe you're in the wrong directory?") unless $?.success?
+
           make_a_commit = false
 
           # check for existing .git repo
-          if File.exist? '.git'
-            notice_message "Looks like a git repository already exists here."
-          else
-            notice_message "Initializing git repository"
-            run_command(Git::Si::GitControl.init_command, {:allow_errors => true})
-            raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless $?.success?
-            make_a_commit = true
-          end
-
-          # add externals to gitignore
-          gitignore_patterns = Git::Si::GitIgnore.ignore_patterns
-          gitignore_patterns += Git::Si::Output.parse_external_repos( get_command_output( Git::Si::SvnControl.status_command ) )
+          make_a_commit = true if create_git_repository()
 
           # check for existing .gitignore
-          if File.exist? '.gitignore'
-            notice_message "Looks like a gitignore file already exists here."
-            missing_patterns = Git::Si::GitIgnore.get_missing_lines_from( File.readlines( '.gitignore' ), gitignore_patterns )
-            if not missing_patterns.empty?
-              using_stderr do
-                say "The .gitignore file is missing the following recommended patterns:\n#{missing_patterns.join( "\n" )}"
-                if yes?("Do you want to add them? [Y/n] ", :green)
-                  append_to_file( '.gitignore', missing_patterns.join("\n") )
-                  run_command( Git::Si::GitControl.add_command('.gitignore') )
-                  make_a_commit = true
-                end
-              end
-            end
-          else
-            notice_message "Creating gitignore file."
-            create_file('.gitignore', gitignore_patterns.join( "\n" ))
-            run_command( Git::Si::GitControl.add_command('.gitignore') )
-            make_a_commit = true
-          end
+          make_a_commit = true if create_gitignore()
 
           # make initial commit
           if make_a_commit
             notice_message "Making initial commit."
-
-            all_svn_files = Git::Si::SvnControl.parse_file_list( get_command_output( Git::Si::SvnControl.list_file_command ) )
-            raise GitSiError.new("No files could be found in the svn repository.") if all_svn_files.empty?
-            all_svn_files.each do |filename|
-              begin
-                run_command( Git::Si::GitControl.add_command(filename) )
-              rescue
-                # errors here are not important enough to stop the whole process
-              end
-            end
-
             run_command( Git::Si::GitControl.commit_revision_command(get_svn_revision) )
           end
 
           # check for exiting mirror branch
-          begin
-            run_command( Git::Si::GitControl.show_branch_command(@@mirror_branch) )
-          rescue
-            # no problem. It just means the branch does not exist.
-          end
-          if $?.success?
-            notice_message "Looks like the mirror branch already exists here."
-          else
-            notice_message "Creating mirror branch '#{@@mirror_branch}'."
-            run_command( Git::Si::GitControl.create_branch_command(@@mirror_branch) )
-          end
+          create_mirror_branch()
 
           success_message "init complete!"
         end
@@ -510,6 +461,76 @@ continue, it's wise to reset the master branch afterward."
 
       def are_there_git_changes?
         Git::Si::GitControl.are_there_changes?( get_command_output(Git::Si::GitControl.status_command()) )
+      end
+
+      def create_git_repository
+        has_repository_changed = false
+        if File.exist? '.git'
+          notice_message "Looks like a git repository already exists here."
+        else
+          notice_message "Initializing git repository"
+          run_command(Git::Si::GitControl.init_command, {:allow_errors => true})
+          raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless $?.success?
+          add_all_svn_files()
+          has_repository_changed = true
+        end
+        has_repository_changed
+      end
+
+      def create_gitignore
+        has_repository_changed = false
+
+        # add externals to gitignore
+        gitignore_patterns = Git::Si::GitIgnore.ignore_patterns
+        gitignore_patterns += Git::Si::Output.parse_external_repos( get_command_output( Git::Si::SvnControl.status_command ) )
+
+        if File.exist? '.gitignore'
+          notice_message "Looks like a gitignore file already exists here."
+          missing_patterns = Git::Si::GitIgnore.get_missing_lines_from( File.readlines( '.gitignore' ), gitignore_patterns )
+          if not missing_patterns.empty?
+            using_stderr do
+              say "The .gitignore file is missing the following recommended patterns:\n#{missing_patterns.join( "\n" )}"
+              if yes?("Do you want to add them? [Y/n] ", :green)
+                append_to_file( '.gitignore', missing_patterns.join("\n") )
+                run_command( Git::Si::GitControl.add_command('.gitignore') )
+                has_repository_changed = true
+              end
+            end
+          end
+        else
+          notice_message "Creating gitignore file."
+          create_file('.gitignore', gitignore_patterns.join( "\n" ))
+          run_command( Git::Si::GitControl.add_command('.gitignore') )
+          has_repository_changed = true
+        end
+        has_repository_changed
+      end
+
+      def add_all_svn_files
+        notice_message "Adding all files present in the svn repository."
+        all_svn_files = Git::Si::SvnControl.parse_file_list( get_command_output( Git::Si::SvnControl.list_file_command ) )
+        raise GitSiError.new("No files could be found in the svn repository.") if all_svn_files.empty?
+        all_svn_files.each do |filename|
+          begin
+            run_command( Git::Si::GitControl.add_command(filename) )
+          rescue
+            # errors here are not important enough to stop the whole process
+          end
+        end
+      end
+
+      def create_mirror_branch
+        begin
+          run_command( Git::Si::GitControl.show_branch_command(@@mirror_branch) )
+        rescue
+          # no problem. It just means the branch does not exist.
+        end
+        if $?.success?
+          notice_message "Looks like the mirror branch already exists here."
+        else
+          notice_message "Creating mirror branch '#{@@mirror_branch}'."
+          run_command( Git::Si::GitControl.create_branch_command(@@mirror_branch) )
+        end
       end
 
     end

@@ -284,6 +284,9 @@ continue, it's wise to reset the master branch afterward."
           run_command(Git::Si::SvnControl.info_command, {:allow_errors => true})
           raise SvnError.new("No svn repository was found here. Maybe you're in the wrong directory?") unless $?.success?
 
+          # make sure svn repo is up-to-date
+          run_command( Git::Si::SvnControl.update_command )
+
           make_a_commit = false
 
           # check for existing .git repo

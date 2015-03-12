@@ -2,6 +2,7 @@ require "git/si/version"
 require "git/si/errors"
 require "git/si/svn-control"
 require "git/si/git-control"
+require "git/si/git-ignore"
 require "git/si/output"
 require "thor"
 require "pager"
@@ -294,25 +295,30 @@ continue, it's wise to reset the master branch afterward."
             make_a_commit = true
           end
 
-          # check for existing .gitignore
-          gitignore = [".svn", "*.sw?", ".config", "*.err", "*.pid", "*.log", "svn-commit.*", "*.orig", "node_modules"]
-          svn_status = get_command_output(Git::Si::SvnControl.status_command)
-          externals = []
-          svn_status.each_line do |line|
-            externals << $1 if line.strip.match(/^X\s+(\S.+)/)
-          end
-          gitignore += externals
-          gitignore = gitignore.join("\n")
+          # add externals to gitignore
+          gitignore_patterns = Git::Si::GitIgnore.ignore_patterns
+          gitignore_patterns += Git::Si::Output.parse_external_repos( get_command_output( Git::Si::SvnControl.status_command ) )
 
+          # check for existing .gitignore
           if File.exist? '.gitignore'
             notice_message "Looks like a gitignore file already exists here."
-            error_message "Be SURE that the gitignore contains the following:\n#{gitignore}"
+            missing_patterns = Git::Si::GitIgnore.get_missing_lines_from( File.readlines( '.gitignore' ), gitignore_patterns )
+            if not missing_patterns.empty?
+              using_stderr do
+                say "The .gitignore file is missing the following recommended patterns:\n#{missing_patterns.join( "\n" )}"
+                if yes?("Do you want to add them? [Y/n] ", :green)
+                  append_to_file( '.gitignore', missing_patterns.join("\n") )
+                  run_command( Git::Si::GitControl.add_command('.gitignore') )
+                  make_a_commit = true
+                end
+              end
+            end
           else
             notice_message "Creating gitignore file."
-            create_file('.gitignore', gitignore)
+            create_file('.gitignore', gitignore_patterns.join( "\n" ))
+            run_command( Git::Si::GitControl.add_command('.gitignore') )
             make_a_commit = true
           end
-          run_command( Git::Si::GitControl.add_command('.gitignore') )
 
           # make initial commit
           if make_a_commit

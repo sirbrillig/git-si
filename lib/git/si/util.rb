@@ -186,17 +186,15 @@ module Git
       end
 
       def create_git_repository
-        has_repository_changed = false
         if File.exist? '.git'
           notice_message "Looks like a git repository already exists here."
-        else
-          notice_message "Initializing git repository"
-          run_command(Git::Si::GitControl.init_command, {:allow_errors => true})
-          raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless did_last_command_succeed?
-          add_all_svn_files()
-          has_repository_changed = true
+          return false
         end
-        has_repository_changed
+        notice_message "Initializing git repository"
+        run_command(Git::Si::GitControl.init_command, {:allow_errors => true})
+        raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless did_last_command_succeed?
+        add_all_svn_files()
+        true
       end
 
       def create_gitignore

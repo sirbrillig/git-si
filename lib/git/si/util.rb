@@ -4,6 +4,10 @@ module Git
 
     module Util
 
+      def did_last_command_succeed?
+        $?.success?
+      end
+
       def run_command(command, options={})
         output = ''
         debug "run_command `#{command}`, options: #{options}"
@@ -12,7 +16,7 @@ module Git
         else
           output = run(command, options.update(verbose: false, capture: true))
         end
-        raise ShellError.new("There was an error while trying to run the command: #{command}. Look above for any errors.") if not options[:allow_errors] and not $?.success?
+        raise ShellError.new("There was an error while trying to run the command: #{command}. Look above for any errors.") if not options[:allow_errors] and not did_last_command_succeed?
         return output
       end
 
@@ -188,7 +192,7 @@ module Git
         else
           notice_message "Initializing git repository"
           run_command(Git::Si::GitControl.init_command, {:allow_errors => true})
-          raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless $?.success?
+          raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless did_last_command_succeed?
           add_all_svn_files()
           has_repository_changed = true
         end
@@ -237,7 +241,7 @@ module Git
         rescue
           # no problem. It just means the branch does not exist.
         end
-        if $?.success?
+        if did_last_command_succeed?
           notice_message "Looks like the mirror branch already exists here."
         else
           notice_message "Creating mirror branch '#{get_mirror_branch}'."

@@ -24,12 +24,6 @@ module Git
 
       default_task :usage
 
-      @@mirror_branch = 'MIRRORBRANCH'
-
-      ##################
-      # Action functions
-      ##################
-
       ################
       # Action: version
       ################

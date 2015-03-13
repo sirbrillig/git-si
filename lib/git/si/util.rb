@@ -91,9 +91,13 @@ module Git
         end
       end
 
+      def get_mirror_branch
+        return 'MIRRORBRANCH'
+      end
+
       def on_mirror_branch(&block)
         local_branch = get_local_branch()
-        run_command( Git::Si::GitControl.checkout_command(@@mirror_branch) )
+        run_command( Git::Si::GitControl.checkout_command(get_mirror_branch) )
         begin
           in_svn_root do
             yield
@@ -229,15 +233,15 @@ module Git
 
       def create_mirror_branch
         begin
-          run_command( Git::Si::GitControl.show_branch_command(@@mirror_branch) )
+          run_command( Git::Si::GitControl.show_branch_command(get_mirror_branch) )
         rescue
           # no problem. It just means the branch does not exist.
         end
         if $?.success?
           notice_message "Looks like the mirror branch already exists here."
         else
-          notice_message "Creating mirror branch '#{@@mirror_branch}'."
-          run_command( Git::Si::GitControl.create_branch_command(@@mirror_branch) )
+          notice_message "Creating mirror branch '#{get_mirror_branch}'."
+          run_command( Git::Si::GitControl.create_branch_command(get_mirror_branch) )
         end
       end
     end

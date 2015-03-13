@@ -24,12 +24,6 @@ module Git
 
       default_task :usage
 
-      @@mirror_branch = 'MIRRORBRANCH'
-
-      ##################
-      # Action functions
-      ##################
-
       ################
       # Action: version
       ################
@@ -152,7 +146,7 @@ use the commands below.
             stashed_changes = true
             run_command(Git::Si::GitControl.stash_command)
           end
-          run_command(Git::Si::GitControl.rebase_command(@@mirror_branch))
+          run_command(Git::Si::GitControl.rebase_command(get_mirror_branch))
           if (stashed_changes)
             notice_message "Restoring uncommitted changed files"
             run_command(Git::Si::GitControl.unstash_command)
@@ -212,7 +206,7 @@ continue, it's wise to reset the master branch afterward."
         local_branch = get_local_branch()
         if local_branch == 'master'
           if yes? "Do you want to reset the master branch to the latest commit (**losing all git history**)? [y/N] ", :green
-            run_command(Git::Si::GitControl.checkout_command(@@mirror_branch))
+            run_command(Git::Si::GitControl.checkout_command(get_mirror_branch))
             run_command(Git::Si::GitControl.delete_branch_command( 'master' ))
             run_command(Git::Si::GitControl.create_branch_command( 'master' ))
             run_command(Git::Si::GitControl.checkout_command('master'))

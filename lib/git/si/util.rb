@@ -198,32 +198,30 @@ module Git
       end
 
       def create_gitignore
-        has_repository_changed = false
-
         # add externals to gitignore
         gitignore_patterns = Git::Si::GitIgnore.ignore_patterns
         gitignore_patterns += Git::Si::Output.parse_external_repos( get_command_output( Git::Si::SvnControl.status_command ) )
 
-        if File.exist? '.gitignore'
-          notice_message "Looks like a gitignore file already exists here."
-          missing_patterns = Git::Si::GitIgnore.get_missing_lines_from( File.readlines( '.gitignore' ), gitignore_patterns )
-          if not missing_patterns.empty?
-            using_stderr do
-              say "The .gitignore file is missing the following recommended patterns:\n#{missing_patterns.join( "\n" )}"
-              if yes?("Do you want to add them? [Y/n] ", :green)
-                append_to_file( '.gitignore', missing_patterns.join("\n") )
-                run_command( Git::Si::GitControl.add_command('.gitignore') )
-                has_repository_changed = true
-              end
-            end
-          end
-        else
+        if not File.exist? '.gitignore'
           notice_message "Creating gitignore file."
           create_file('.gitignore', gitignore_patterns.join( "\n" ))
           run_command( Git::Si::GitControl.add_command('.gitignore') )
-          has_repository_changed = true
+          return true
         end
-        has_repository_changed
+
+        notice_message "Looks like a gitignore file already exists here."
+        missing_patterns = Git::Si::GitIgnore.get_missing_lines_from( File.readlines( '.gitignore' ), gitignore_patterns )
+        if not missing_patterns.empty?
+          using_stderr do
+            say "The .gitignore file is missing the following recommended patterns:\n#{missing_patterns.join( "\n" )}"
+            if yes?("Do you want to add them? [Y/n] ", :green)
+              append_to_file( '.gitignore', missing_patterns.join("\n") )
+              run_command( Git::Si::GitControl.add_command('.gitignore') )
+              return true
+            end
+          end
+        end
+        false
       end
 
       def add_all_svn_files

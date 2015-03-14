@@ -1,3 +1,5 @@
+require "git/si/errors"
+
 module Git
 
   module Si
@@ -16,7 +18,7 @@ module Git
         else
           output = run(command, options.update(verbose: false, capture: true))
         end
-        raise ShellError.new("There was an error while trying to run the command: #{command}. Look above for any errors.") if not options[:allow_errors] and not did_last_command_succeed?
+        raise Git::Si::ShellError.new("There was an error while trying to run the command: #{command}. Look above for any errors.") if not options[:allow_errors] and not did_last_command_succeed?
         return output
       end
 
@@ -65,14 +67,14 @@ module Git
       def get_svn_root
         svn_info = get_command_output(Git::Si::SvnControl.info_command, {:allow_errors => true})
         root_dir = Git::Si::SvnControl.parse_root_path(svn_info)
-        raise SvnError.new("Could not find the svn root directory.") unless root_dir
+        raise Git::Si::SvnError.new("Could not find the svn root directory.") unless root_dir
         root_dir
       end
 
       def get_local_branch
         git_branches = get_command_output(Git::Si::GitControl.branch_command)
         local_branch = Git::Si::GitControl.parse_current_branch(git_branches)
-        raise GitError.new("Could not find local branch name.") unless local_branch
+        raise Git::Si::GitError.new("Could not find local branch name.") unless local_branch
         return local_branch
       end
 
@@ -89,7 +91,7 @@ module Git
           in_svn_root do
             yield
           end
-        rescue GitSiError => err
+        rescue Git::Si::GitSiError => err
           error_message err
           exit false
         end
@@ -106,7 +108,7 @@ module Git
           in_svn_root do
             yield
           end
-        rescue GitSiError => err
+        rescue Git::Si::GitSiError => err
           error_message err
           exit false
         ensure
@@ -154,7 +156,7 @@ module Git
         debug "comparing last fetched revision #{last_fetched_version} and last rebased revision #{last_rebased_version}"
 
         if last_fetched_version > last_rebased_version
-          raise VersionError.new("This branch is out-of-date (svn revision #{last_rebased_version}; svn is at #{last_fetched_version}). You should do a git si rebase or git si pull.")
+          raise Git::Si::VersionError.new("This branch is out-of-date (svn revision #{last_rebased_version}; svn is at #{last_fetched_version}). You should do a git si rebase or git si pull.")
         elsif last_fetched_version < last_rebased_version
           return true if ask("This branch is newer (svn revision #{last_rebased_version}) than svn (rev #{last_fetched_version}). That can happen when svn changes have been made directly and may be fine. Do you want to continue? [Y/n] ", :green) =~ /\s*^n/i
         end
@@ -182,7 +184,7 @@ module Git
       end
 
       def are_there_git_changes?
-        Git::Si::GitControl.are_there_changes?( get_command_output(Git::Si::GitControl.status_command()) )
+        Git::Si::GitControl.are_there_changes?( get_command_output( Git::Si::GitControl.status_command ) )
       end
 
       def create_git_repository
@@ -192,7 +194,7 @@ module Git
         end
         notice_message "Initializing git repository"
         run_command(Git::Si::GitControl.init_command, {:allow_errors => true})
-        raise GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless did_last_command_succeed?
+        raise Git::Si::GitError.new("Failed to initialize git repository. I'm not sure why. Check for any errors above.") unless did_last_command_succeed?
         add_all_svn_files()
         true
       end
@@ -227,7 +229,7 @@ module Git
       def add_all_svn_files
         notice_message "Adding all files present in the svn repository."
         all_svn_files = Git::Si::SvnControl.parse_file_list( get_command_output( Git::Si::SvnControl.list_file_command ) )
-        raise GitSiError.new("No files could be found in the svn repository.") if all_svn_files.empty?
+        raise Git::Si::GitSiError.new("No files could be found in the svn repository.") if all_svn_files.empty?
         batch_add_files_to_git( all_svn_files )
       end
 
@@ -244,6 +246,65 @@ module Git
           run_command( Git::Si::GitControl.create_branch_command(get_mirror_branch) )
         end
       end
+
+      def stash_local_changes
+        on_local_branch do
+          if are_there_git_changes?
+            notice_message "Preserving uncommitted changed files"
+            run_command( Git::Si::GitControl.stash_command )
+            return true
+          end
+        end
+        false
+      end
+
+      def unstash_local_changes( did_stash_changes )
+        if did_stash_changes
+          notice_message "Restoring uncommitted changed files"
+          run_command( Git::Si::GitControl.unstash_command )
+        end
+      end
+
+      def is_file_in_git?( filename )
+        not get_command_output( Git::Si::GitControl.list_file_command( filename ) ).empty?
+      end
+
+      def revert_files_to_svn_update( updated_files )
+        notice_message "Reverting any local changes in mirror branch"
+        # revert everything, but sometimes that doesn't work, so revert conflicts too.
+        run_command( Git::Si::SvnControl.revert_command )
+        Git::Si::SvnControl.parse_conflicted_files( updated_files ).each do |filename|
+          run_command( Git::Si::SvnControl.revert_command( filename ) )
+        end
+      end
+
+      def delete_files_after_svn_update( updated_files )
+        # delete deleted files.
+        Git::Si::SvnControl.parse_deleted_files( updated_files ).each do |filename|
+          run_command( Git::Si::GitControl.delete_command( filename ) )
+        end
+      end
+
+      def add_files_after_svn_update( updated_files )
+        notice_message "Updating mirror branch to match new data"
+        # add updated files
+        Git::Si::SvnControl.parse_updated_files( updated_files ).each do |filename|
+          begin
+            # TODO: batch add these
+            run_command( Git::Si::GitControl.add_command( filename ) )
+          rescue
+            # an error here is not worth it to stop the process.
+          end
+        end
+      end
+
+      def delete_committed_branch( local_branch )
+        run_command( Git::Si::GitControl.checkout_command( 'master' ) )
+        do_rebase_action
+        run_command( Git::Si::GitControl.delete_branch_command( local_branch ) )
+        success_message "branch '#{local_branch}' deleted!"
+      end
+
     end
   end
 end

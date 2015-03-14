@@ -17,6 +17,20 @@ describe Git::Si::Util do
       def debug(toss)
       end
 
+      def in_svn_root
+        yield
+      end
+
+      def on_mirror_branch
+        yield
+      end
+
+      def error_message(toss)
+      end
+
+      def success_message(toss)
+      end
+
       def notice_message(toss)
       end
 
@@ -44,8 +58,34 @@ Node Kind: directory
 Schedule: normal
 Last Changed Author: me
 Last Changed Rev: 1
-"
-  }
+" }
+
+  let( :svn_status_output ) { "Z foobar
+X foobar
+M foobar.git
+M foobar.swp
+M barfoo
+A something
+D something else
+? whatever
+" }
+
+  let( :svn_update_output ) { "
+Restored 'bin/tests/importantthing'
+A    bin/tests/foobar
+U    bin/tests/api/goobar
+G    bin/tests/api/special
+U    bin/tests/api/anotherfile
+A    bin/tests/barfoo
+?    unknownfile.md
+D    byefile
+   C myimage.png
+D    badjs.js
+   C something/javascript.js
+   A something/newjs.js
+C    css/_base.scss
+Updated to revision 113333.
+" }
 
   subject { test_mixin_host.new( runner_spy ) }
 
@@ -56,12 +96,12 @@ Last Changed Rev: 1
     end
 
     it "passes :capture option to run_command" do
-      expect( runner_spy ).to receive( :run_command ).with( anything, hash_including( capture: true ) )
+      expect( runner_spy ).to receive( :run_command ).with( any_args, hash_including( capture: true ) )
       subject.get_command_output( 'test' )
     end
 
     it "passes command to run_command" do
-      expect( runner_spy ).to receive( :run_command ).with( 'test', anything )
+      expect( runner_spy ).to receive( :run_command ).with( 'test', any_args )
       subject.get_command_output( 'test' )
     end
   end
@@ -92,7 +132,7 @@ Last Changed Rev: 1
 
   describe "#get_git_si_revision" do
     it "calls git log command" do
-      expect( runner_spy ).to receive( :run_command ).with( /git log/, anything )
+      expect( runner_spy ).to receive( :run_command ).with( /git log/, any_args )
       subject.get_git_si_revision
     end
 
@@ -104,7 +144,7 @@ Last Changed Rev: 1
 
   describe "#get_svn_revision" do
     it "calls svn info command" do
-      expect( runner_spy ).to receive( :run_command ).with( /svn info/, anything )
+      expect( runner_spy ).to receive( :run_command ).with( /svn info/, any_args )
       subject.get_svn_revision
     end
 
@@ -134,21 +174,21 @@ Last Changed Rev: 1
 
   describe "#do_revisions_differ" do
     it "returns false if last logged svn revision is equal to current svn revision" do
-      allow( subject ).to receive( :run_command ).with( /svn info/, anything ).and_return( svn_info_output )
-      allow( subject ).to receive( :run_command ).with( /git log/, anything ).and_return( "svn update to version 1012" )
+      allow( subject ).to receive( :run_command ).with( /svn info/, any_args ).and_return( svn_info_output )
+      allow( subject ).to receive( :run_command ).with( /git log/, any_args ).and_return( "svn update to version 1012" )
       expect( subject.do_revisions_differ ).to be_falsey
     end
 
     it "raises an exception if last logged svn revision is less than current svn revision" do
-      allow( subject ).to receive( :run_command ).with( /svn info/, anything ).and_return( svn_info_output )
-      allow( subject ).to receive( :run_command ).with( /git log/, anything ).and_return( "svn update to version 1000" )
+      allow( subject ).to receive( :run_command ).with( /svn info/, any_args ).and_return( svn_info_output )
+      allow( subject ).to receive( :run_command ).with( /git log/, any_args ).and_return( "svn update to version 1000" )
       expect { subject.do_revisions_differ }.to raise_error
     end
 
     it "returns true if last logged svn revision is greater than current svn revision (if user says not to continue)" do
       allow( subject ).to receive( :ask ).and_return( 'n' )
-      allow( subject ).to receive( :run_command ).with( /svn info/, anything ).and_return( svn_info_output )
-      allow( subject ).to receive( :run_command ).with( /git log/, anything ).and_return( "svn update to version 2000" )
+      allow( subject ).to receive( :run_command ).with( /svn info/, any_args ).and_return( svn_info_output )
+      allow( subject ).to receive( :run_command ).with( /git log/, any_args ).and_return( "svn update to version 2000" )
       expect( subject.do_revisions_differ ).to be_truthy
     end
   end
@@ -190,7 +230,7 @@ Last Changed Rev: 1
       end
 
       it "calls git init" do
-        expect( runner_spy ).to receive( :run_command ).with( /git init/, anything )
+        expect( runner_spy ).to receive( :run_command ).with( /git init/, any_args )
         subject.create_git_repository
       end
 
@@ -234,7 +274,7 @@ M something else
       end
 
       it "adds the file to git" do
-        expect( runner_spy ).to receive( :run_command ).with( /git add \.gitignore/, anything ).once
+        expect( runner_spy ).to receive( :run_command ).with( /git add \.gitignore/, any_args ).once
         subject.create_gitignore
       end
     end
@@ -261,7 +301,7 @@ M something else
         end
 
         it "adds the file to git" do
-          expect( runner_spy ).to receive( :run_command ).with( /git add \.gitignore/, anything ).once
+          expect( runner_spy ).to receive( :run_command ).with( /git add \.gitignore/, any_args ).once
           subject.create_gitignore
         end
       end
@@ -296,14 +336,121 @@ dir1/file3
 
   describe "#create_mirror_branch" do
     it "does not create the mirror branch if it already exists" do
-      expect( runner_spy ).not_to receive( :run_command ).with( /git branch \w+/, anything )
+      expect( runner_spy ).not_to receive( :run_command ).with( /git branch \w+/, any_args )
       subject.create_mirror_branch
     end
 
     it "creates the mirror branch if it does not exist" do
       allow( subject ).to receive( :did_last_command_succeed? ).and_return( false )
-      expect( runner_spy ).to receive( :run_command ).with( /git branch \w+/, anything )
+      expect( runner_spy ).to receive( :run_command ).with( /git branch \w+/, any_args )
       subject.create_mirror_branch
+    end
+  end
+
+  describe "#stash_local_changes" do
+    it "does not call stash_command if there are no changes" do
+      allow( subject ).to receive( :are_there_git_changes? ).and_return( false )
+      expect( runner_spy ).not_to receive( :run_command ).with( /git stash/, any_args )
+      subject.stash_local_changes
+    end
+
+    it "calls the stash_command if there are changes" do
+      allow( subject ).to receive( :are_there_git_changes? ).and_return( true )
+      expect( runner_spy ).to receive( :run_command ).with( /git stash/, any_args )
+      subject.stash_local_changes
+    end
+
+    it "returns true if there are changes" do
+      allow( subject ).to receive( :are_there_git_changes? ).and_return( true )
+      expect( subject.stash_local_changes ).to eq( true )
+    end
+
+    it "returns false if there are no changes" do
+      allow( subject ).to receive( :are_there_git_changes? ).and_return( false )
+      expect( subject.stash_local_changes ).to eq( false )
+    end
+  end
+
+  describe "#unstash_local_changes" do
+    it "does not call unstash_command if there are no changes" do
+      expect( runner_spy ).not_to receive( :run_command ).with( /git stash/, any_args )
+      subject.unstash_local_changes( false )
+    end
+
+    it "calls the unstash_command if there are changes" do
+      expect( runner_spy ).to receive( :run_command ).with( /git stash/, any_args )
+      subject.unstash_local_changes( true )
+    end
+  end
+
+  describe "#revert_files_to_svn_update" do
+    before do
+      allow( subject ).to receive( :run_command )
+    end
+
+    it "runs the revert command for all files" do
+      expect( subject ).to receive( :run_command ).with( /svn revert -R \./ )
+      subject.revert_files_to_svn_update( svn_update_output )
+    end
+
+    it "runs the revert command for every conflicted file in the input string" do
+      expect( subject ).to receive( :run_command ).with( /svn revert/ ).exactly( 4 ).times
+      subject.revert_files_to_svn_update( svn_update_output )
+    end
+  end
+
+  describe "#delete_files_after_svn_update" do
+    before do
+      allow( subject ).to receive( :run_command )
+    end
+
+    it "runs the delete command for every deleted file in the input string" do
+      expect( subject ).to receive( :run_command ).with( /git rm/ ).exactly( 2 ).times
+      subject.delete_files_after_svn_update( svn_update_output )
+    end
+  end
+
+  describe "#add_files_after_svn_update" do
+    before do
+      allow( subject ).to receive( :run_command )
+    end
+
+    it "runs the delete command for every deleted file in the input string" do
+      expect( subject ).to receive( :run_command ).with( /git add/ ).exactly( 7 ).times
+      subject.add_files_after_svn_update( svn_update_output )
+    end
+  end
+
+  describe "#delete_committed_branch" do
+    before do
+      allow( subject ).to receive( :do_rebase_action )
+    end
+
+    it "checks out the master branch" do
+      expect( runner_spy ).to receive( :run_command ).with( /git checkout master/, any_args )
+      subject.delete_committed_branch( 'foobar' )
+    end
+
+    it "rebases onto the mirror branch" do
+      expect( subject ).to receive( :do_rebase_action ).once
+      subject.delete_committed_branch( 'foobar' )
+    end
+
+    it "deletes the passed branch" do
+      expect( runner_spy ).to receive( :run_command ).with( /git branch -D.+foobar/, any_args )
+      subject.delete_committed_branch( 'foobar' )
+    end
+  end
+
+  describe "#is_file_in_git?" do
+    it "returns true if the file is listed by git" do
+      allow( subject ).to receive( :run_command ).with( /git ls-files.+foobar/, any_args ).and_return( 'foobar' )
+      expect( subject.is_file_in_git?( 'foobar' ) ).to be_truthy
+    end
+
+    it "returns false if the file is not listed by git" do
+      allow( subject ).to receive( :run_command ).with( /git ls-files.+foobar/, any_args ).and_return( '' )
+      expect( subject.is_file_in_git?( 'foobar' ) ).to be_falsey
     end
   end
 

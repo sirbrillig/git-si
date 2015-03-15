@@ -415,8 +415,8 @@ dir1/file3
       allow( subject ).to receive( :run_command )
     end
 
-    it "runs the delete command for every deleted file in the input string" do
-      expect( subject ).to receive( :run_command ).with( /git add/ ).exactly( 7 ).times
+    it "runs the add command for every updated file in the input string" do
+      expect( subject ).to receive( :batch_add_files_to_git ).with( [ 'bin/tests/importantthing', 'bin/tests/foobar', 'bin/tests/api/goobar', 'bin/tests/api/special', 'bin/tests/api/anotherfile', 'bin/tests/barfoo', 'something/newjs.js' ] )
       subject.add_files_after_svn_update( svn_update_output )
     end
   end

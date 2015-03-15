@@ -288,14 +288,8 @@ module Git
       def add_files_after_svn_update( updated_files )
         notice_message "Updating mirror branch to match new data"
         # add updated files
-        Git::Si::SvnControl.parse_updated_files( updated_files ).each do |filename|
-          begin
-            # TODO: batch add these
-            run_command( Git::Si::GitControl.add_command( filename ) )
-          rescue
-            # an error here is not worth it to stop the process.
-          end
-        end
+        updated_files = Git::Si::SvnControl.parse_updated_files( updated_files )
+        batch_add_files_to_git( updated_files )
       end
 
       def delete_committed_branch( local_branch )

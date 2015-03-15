@@ -34,13 +34,16 @@ module Git
         say Git::Si::Version.version_string
       end
 
+      ################
+      # Action: usage
+      ################
       desc "usage", "How does this thing work?"
       def usage
         say "#{Git::Si::Version.version_string}
 
 Git Svn Interface: a simple git extention to use git locally with a remote svn
-repo. It's like a simple version of git-svn which doesn't keep track of history
-locally.
+repository. It's like a simple version of git-svn just for using local
+branching. It does not keep track of the full history of the svn repository.
 
 Start with the init command to set up the mirror branch and from there you can
 use the commands below.
@@ -59,7 +62,7 @@ use the commands below.
       end
 
       ################
-      # Action: status
+      # Action: diff
       ################
       desc "diff [FILES]", "Perform an svn diff piped through a colorizer. Also tests to be sure a rebase is not needed."
       def diff(*args)

@@ -1,6 +1,51 @@
 require "git/si/svn-control"
 
 describe Git::Si::SvnControl do
+  let( :svn_diff_output ) {
+    "Z foobar
+X foobar
+M foobar.git
+M foobar.swp
+M barfoo
+A something
+D something else
+? whatever
+" }
+
+  let( :svn_info_output ) {
+      "
+Path: .
+Working Copy Root Path: /path/place
+URL: file:///Users/path/place
+Relative URL: ^/test
+Repository Root: file:///Users/path/place
+Repository UUID: 0101010101
+Revision: 1014
+Node Kind: directory
+Schedule: normal
+Last Changed Author: me
+Last Changed Rev: 1
+" }
+
+  let( :svn_update_output ) {
+      "
+Restored 'bin/tests/importantthing'
+A    bin/tests/foobar
+U    bin/tests/api/goobar
+G    bin/tests/api/special
+U    bin/tests/api/anotherfile
+A    bin/tests/barfoo
+?    unknownfile.md
+D    byefile
+   C myimage.png
+D    badjs.js
+   C something/javascript.js
+   A something/newjs.js
+C    css/_base.scss
+Updated to revision 113333.
+Resolved conflicted state of 'weirdthing/weird.php'
+" }
+
   describe ".status_command" do
     it "returns the correct svn command" do
       expected = "svn status --ignore-externals"
@@ -61,20 +106,7 @@ describe Git::Si::SvnControl do
 
     it "returns the revision number from correct data" do
       expected = "1014"
-      data = "
-Path: .
-Working Copy Root Path: /path/place
-URL: file:///Users/path/place
-Relative URL: ^/test
-Repository Root: file:///Users/path/place
-Repository UUID: 0101010101
-Revision: 1014
-Node Kind: directory
-Schedule: normal
-Last Changed Author: me
-Last Changed Rev: 1
-"
-      actual = Git::Si::SvnControl.parse_last_revision(data)
+      actual = Git::Si::SvnControl.parse_last_revision( svn_info_output )
       expect(actual).to eq(expected)
     end
   end
@@ -99,128 +131,106 @@ Last Changed Rev: 1
     end
   end
 
-  context "for svn update data" do
-    before do
-      @data = "
-Restored 'bin/tests/importantthing'
-A    bin/tests/foobar
-U    bin/tests/api/goobar
-G    bin/tests/api/special
-U    bin/tests/api/anotherfile
-A    bin/tests/barfoo
-?    unknownfile.md
-D    byefile
-   C myimage.png
-D    badjs.js
-   C something/javascript.js
-   A something/newjs.js
-C    css/_base.scss
-Updated to revision 113333.
-Resolved conflicted state of 'weirdthing/weird.php'
-"
+  describe ".parse_updated_files" do
+    it "returns files that have been added" do
+      expected = [
+        'bin/tests/foobar',
+        'bin/tests/barfoo'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files( svn_update_output ) ).to include( *expected )
     end
 
-    describe ".parse_updated_files" do
-      it "returns files that have been added" do
-        expected = [
-          'bin/tests/foobar',
-          'bin/tests/barfoo'
-        ]
-        expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
-      end
-
-      it "returns files that have been restored" do
-        expected = [
-          'bin/tests/importantthing'
-        ]
-        expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
-      end
-
-      it "returns files that are updated" do
-        expected = [
-          'bin/tests/api/goobar',
-          'bin/tests/api/special',
-          'bin/tests/api/anotherfile'
-        ]
-        expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
-      end
-
-      it "returns files that are resolved conflicts" do
-        expected = [
-          'weirdthing/weird.php'
-        ]
-        expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
-      end
-
-      it "does not return files that are in conflict" do
-        expected = [
-          'myimage.png',
-          'css/_base.scss',
-          'something/javascript.js'
-        ]
-        expect( Git::Si::SvnControl.parse_updated_files(@data) ).not_to include( *expected )
-      end
-
-      it "does not return files that are deleted" do
-        expected = [
-          'byefile',
-          'badjs.js'
-        ]
-        expect( Git::Si::SvnControl.parse_updated_files(@data) ).not_to include( *expected )
-      end
-
-      it "returns files whose properties have been updated" do
-        expected = [
-          'something/newjs.js'
-        ]
-        expect( Git::Si::SvnControl.parse_updated_files(@data) ).to include( *expected )
-      end
+    it "returns files that have been restored" do
+      expected = [
+        'bin/tests/importantthing'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files( svn_update_output ) ).to include( *expected )
     end
 
-    describe ".parse_deleted_files" do
-      it "does not return files that are deleted" do
-        expected = [
-          'byefile',
-          'badjs.js'
-        ]
-        expect( Git::Si::SvnControl.parse_deleted_files(@data) ).to include( *expected )
-      end
+    it "returns files that are updated" do
+      expected = [
+        'bin/tests/api/goobar',
+        'bin/tests/api/special',
+        'bin/tests/api/anotherfile'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files( svn_update_output ) ).to include( *expected )
     end
 
-    describe ".parse_conflicted_files" do
-      it "returns files that are resolved conflicts" do
-        expected = [
-          'weirdthing/weird.php'
-        ]
-        expect( Git::Si::SvnControl.parse_conflicted_files(@data) ).to include( *expected )
-      end
-
-      it "returns files which have conflicts" do
-        expected = [
-          'myimage.png',
-          'css/_base.scss',
-          'something/javascript.js'
-        ]
-        expect( Git::Si::SvnControl.parse_conflicted_files(@data) ).to include( *expected )
-      end
+    it "returns files that are resolved conflicts" do
+      expected = [
+        'weirdthing/weird.php'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files( svn_update_output ) ).to include( *expected )
     end
 
-    describe ".parse_unknown_files" do
-      it "returns files that are not tracked" do
-        expected = [
-          'unknownfile.md'
-        ]
-        expect( Git::Si::SvnControl.parse_unknown_files(@data) ).to include( *expected )
-      end
+    it "does not return files that are in conflict" do
+      expected = [
+        'myimage.png',
+        'css/_base.scss',
+        'something/javascript.js'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files( svn_update_output ) ).not_to include( *expected )
+    end
 
-      it "does not return files that are tracked" do
-        expected = [
-          'myimage.png',
-          'css/_base.scss',
-          'something/javascript.js'
-        ]
-        expect( Git::Si::SvnControl.parse_unknown_files(@data) ).not_to include( *expected )
-      end
+    it "does not return files that are deleted" do
+      expected = [
+        'byefile',
+        'badjs.js'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files( svn_update_output ) ).not_to include( *expected )
+    end
+
+    it "returns files whose properties have been updated" do
+      expected = [
+        'something/newjs.js'
+      ]
+      expect( Git::Si::SvnControl.parse_updated_files( svn_update_output ) ).to include( *expected )
+    end
+  end
+
+  describe ".parse_deleted_files" do
+    it "does not return files that are deleted" do
+      expected = [
+        'byefile',
+        'badjs.js'
+      ]
+      expect( Git::Si::SvnControl.parse_deleted_files( svn_update_output ) ).to include( *expected )
+    end
+  end
+
+  describe ".parse_conflicted_files" do
+    it "returns files that are resolved conflicts" do
+      expected = [
+        'weirdthing/weird.php'
+      ]
+      expect( Git::Si::SvnControl.parse_conflicted_files( svn_update_output ) ).to include( *expected )
+    end
+
+    it "returns files which have conflicts" do
+      expected = [
+        'myimage.png',
+        'css/_base.scss',
+        'something/javascript.js'
+      ]
+      expect( Git::Si::SvnControl.parse_conflicted_files( svn_update_output ) ).to include( *expected )
+    end
+  end
+
+  describe ".parse_unknown_files" do
+    it "returns files that are not tracked" do
+      expected = [
+        'unknownfile.md'
+      ]
+      expect( Git::Si::SvnControl.parse_unknown_files( svn_update_output ) ).to include( *expected )
+    end
+
+    it "does not return files that are tracked" do
+      expected = [
+        'myimage.png',
+        'css/_base.scss',
+        'something/javascript.js'
+      ]
+      expect( Git::Si::SvnControl.parse_unknown_files( svn_update_output ) ).not_to include( *expected )
     end
   end
 
@@ -280,8 +290,7 @@ Revision: 1432
   end
 
   describe ".parse_file_list" do
-    before do
-      @data = "
+    let ( :svn_list_output ) { "
 .hiddenfile
 .hiddendir/
 .hiddendir/regularfile.txt
@@ -290,22 +299,21 @@ something/
 something/.subhidden/
 something/.subhidden/regularfile.txt
 something/javascript.js
-"
-    end
+" }
 
     it "returns files in the list" do
       expected = [
         'myimage.png',
         'something/javascript.js'
       ]
-      expect( Git::Si::SvnControl.parse_file_list(@data) ).to include( *expected )
+      expect( Git::Si::SvnControl.parse_file_list( svn_list_output ) ).to include( *expected )
     end
 
     it "does not return directories" do
       expected = [
         'something/'
       ]
-      expect( Git::Si::SvnControl.parse_file_list(@data) ).not_to include( *expected )
+      expect( Git::Si::SvnControl.parse_file_list( svn_list_output ) ).not_to include( *expected )
     end
 
     it "does not return empty strings" do
@@ -313,7 +321,7 @@ something/javascript.js
         '',
         ' ',
       ]
-      expect( Git::Si::SvnControl.parse_file_list(@data) ).not_to include( *expected )
+      expect( Git::Si::SvnControl.parse_file_list( svn_list_output ) ).not_to include( *expected )
     end
 
     it "does not return hidden files or files in hidden directories" do
@@ -322,7 +330,7 @@ something/javascript.js
         '.hiddendir/regularfile.txt',
         'something/.subhidden/regularfile.txt'
       ]
-      expect( Git::Si::SvnControl.parse_file_list(@data) ).not_to include( *expected )
+      expect( Git::Si::SvnControl.parse_file_list( svn_list_output ) ).not_to include( *expected )
     end
   end
 end

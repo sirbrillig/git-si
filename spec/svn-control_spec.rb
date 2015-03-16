@@ -1,7 +1,7 @@
 require "git/si/svn-control"
 
 describe Git::Si::SvnControl do
-  let( :svn_diff_output ) {
+  let( :svn_status_output ) {
     "Z foobar
 X foobar
 M foobar.git
@@ -333,6 +333,59 @@ something/javascript.js
       expect( Git::Si::SvnControl.parse_file_list( svn_list_output ) ).not_to include( *expected )
     end
   end
+
+  describe ".parse_external_repos" do
+    it "includes lines beginning with 'X'" do
+      expected = [ 'foobar' ]
+      actual = Git::Si::SvnControl.parse_external_repos( svn_status_output )
+      expect(actual).to include(*expected)
+    end
+
+    it "excludes lines starting with 'M'" do
+      expected = [ 'barfoo' ]
+      actual = Git::Si::SvnControl.parse_external_repos( svn_status_output )
+      expect(actual).not_to include(expected)
+    end
+  end
+
+  describe ".parse_svn_status" do
+    it "excludes lines beginning with 'X'" do
+      expected = 'X foobar'
+      actual = Git::Si::SvnControl.parse_svn_status( svn_status_output )
+      expect(actual).to_not include(expected)
+    end
+
+    it "excludes lines ending with '.git'" do
+      expected = 'foobar.git'
+      actual = Git::Si::SvnControl.parse_svn_status( svn_status_output )
+      expect(actual).to_not include(expected)
+    end
+
+    it "excludes lines ending with '.swp'" do
+      expected = 'foobar.swp'
+      actual = Git::Si::SvnControl.parse_svn_status( svn_status_output )
+      expect(actual).to_not include(expected)
+    end
+
+    it "includes lines starting with 'M'" do
+      expected = 'M barfoo'
+      actual = Git::Si::SvnControl.parse_svn_status( svn_status_output )
+      expect(actual).to include(expected)
+    end
+
+    it "includes lines starting with 'A'" do
+      expected = 'A something'
+      actual = Git::Si::SvnControl.parse_svn_status( svn_status_output )
+      expect(actual).to include(expected)
+    end
+
+    it "includes lines starting with '?'" do
+      expected = '? whatever'
+      actual = Git::Si::SvnControl.parse_svn_status( svn_status_output )
+      expect(actual).to include(expected)
+    end
+  end
+
 end
 
 

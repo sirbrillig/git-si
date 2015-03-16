@@ -202,7 +202,7 @@ module Git
       def create_gitignore
         # add externals to gitignore
         gitignore_patterns = Git::Si::GitIgnore.ignore_patterns
-        gitignore_patterns += Git::Si::Output.parse_external_repos( get_command_output( Git::Si::SvnControl.status_command ) )
+        gitignore_patterns += Git::Si::SvnControl.parse_external_repos( get_command_output( Git::Si::SvnControl.status_command ) )
 
         if not File.exist? '.gitignore'
           notice_message "Creating gitignore file."

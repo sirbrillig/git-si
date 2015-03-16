@@ -10,7 +10,7 @@ module Git
         on_local_branch do
           return if do_revisions_differ()
           svn_status = get_command_output( Git::Si::SvnControl.status_command( args ) )
-          print_colordiff Git::Si::Output.svn_status( svn_status )
+          print_colordiff Git::Si::SvnControl.parse_svn_status( svn_status ).join( "\n" )
         end
       end
 

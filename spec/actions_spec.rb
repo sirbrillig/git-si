@@ -153,6 +153,11 @@ M something else"
       expect( subject ).to receive( :on_mirror_branch ).once
       subject.do_atune_action
     end
+
+    it "calls add_all_svn_files" do
+      expect( subject ).to receive( :add_all_svn_files ).once
+      subject.do_atune_action
+    end
   end
 
   describe "#do_fetch_action" do

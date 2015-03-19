@@ -143,6 +143,18 @@ M something else"
     end
   end
 
+  describe "#do_atune_action" do
+    it "calls git commit all" do
+      expect( runner_spy ).to receive( :run_command ).with( /git commit.*-a/, any_args )
+      subject.do_atune_action
+    end
+
+    it "operates in the mirror branch" do
+      expect( subject ).to receive( :on_mirror_branch ).once
+      subject.do_atune_action
+    end
+  end
+
   describe "#do_fetch_action" do
     it "calls stash_local_changes" do
       expect( subject ).to receive( :stash_local_changes ).once

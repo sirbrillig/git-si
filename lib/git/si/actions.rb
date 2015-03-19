@@ -147,6 +147,13 @@ module Git
         end
       end
 
+      def do_atune_action
+        notice_message "Atuning mirror branch with current svn state"
+        on_mirror_branch do
+          run_command( Git::Si::GitControl.commit_all_command )
+        end
+      end
+
     end
   end
 end

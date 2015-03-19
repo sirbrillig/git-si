@@ -153,6 +153,9 @@ module Git
           add_all_svn_files
           run_command( Git::Si::GitControl.commit_all_command )
         end
+        on_local_branch do
+          run_command( Git::Si::GitControl.rebase_command( get_mirror_branch ) )
+        end
       end
 
     end

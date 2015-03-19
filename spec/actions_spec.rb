@@ -158,6 +158,12 @@ M something else"
       expect( subject ).to receive( :add_all_svn_files ).once
       subject.do_atune_action
     end
+
+    it "calls rebase command with the mirror branch" do
+      allow( subject ).to receive( :get_mirror_branch ).and_return( 'testbranch' )
+      expect( runner_spy ).to receive( :run_command ).with( /git rebase .+testbranch/, any_args )
+      subject.do_atune_action
+    end
   end
 
   describe "#do_fetch_action" do

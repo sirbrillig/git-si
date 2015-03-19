@@ -102,7 +102,7 @@ module Git
 
       def self.delete_command(filename)
         raise GitSiError.new("Remove file command requires filename") if filename.empty?
-        "#{@@git_binary} rm #{filename}"
+        "#{@@git_binary} rm -r #{filename}"
       end
 
     end

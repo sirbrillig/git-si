@@ -248,7 +248,7 @@ git-si 0.3.0 svn update to version 1014
     end
 
     it "returns the correct command" do
-      expect(Git::Si::GitControl.delete_command('foobar')).to eq( "git rm foobar" )
+      expect(Git::Si::GitControl.delete_command('foobar')).to eq( "git rm -r foobar" )
     end
   end
 end

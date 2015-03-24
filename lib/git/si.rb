@@ -114,6 +114,15 @@ use the commands below.
       end
 
       ################
+      # Action: atune
+      ################
+      desc "atune", "Commit files to mirror branch that have been modified."
+      def atune
+        configure
+        do_atune_action
+      end
+
+      ################
       # Action: readd
       ################
       desc "readd", "Add files to svn that have been added to git."

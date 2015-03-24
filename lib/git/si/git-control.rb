@@ -45,6 +45,11 @@ module Git
         "#{@@git_binary} commit --allow-empty -am 'git-si #{version} svn update to version #{revision}'"
       end
 
+      def self.commit_all_command
+        version = Git::Si::Version.version
+        "#{@@git_binary} commit --allow-empty -am 'git-si #{version} atuned to current svn state'"
+      end
+
       def self.stash_command
         "#{@@git_binary} stash"
       end

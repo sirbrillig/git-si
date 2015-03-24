@@ -138,6 +138,13 @@ git-si 0.3.0 svn update to version 1014
     end
   end
 
+  describe ".commit_all_command" do
+    it "returns the correct command" do
+      version = Git::Si::Version.version
+      expect( Git::Si::GitControl.commit_all_command ).to eq( "git commit --allow-empty -am 'git-si #{version} atuned to current svn state'" )
+    end
+  end
+
   describe ".stash_command" do
     it "returns the correct command" do
       expect(Git::Si::GitControl.stash_command).to eq( "git stash" )

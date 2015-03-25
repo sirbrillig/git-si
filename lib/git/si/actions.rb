@@ -53,6 +53,8 @@ module Git
             if yes? "Do you want to add the above files to svn? [y/N] ", :green
               run_command( Git::Si::SvnControl.add_command( files_to_add ) )
               success_message "Added files to svn that had been added to git."
+            elsif yes? "Since you did not add them to svn, do you want to remove the above files from git? [y/N] ", :green
+              run_command( Git::Si::GitControl.remove_command( files_to_add ) )
             end
           end
 
@@ -161,4 +163,3 @@ module Git
     end
   end
 end
-

@@ -36,6 +36,11 @@ module Git
         "#{@@git_binary} add " + files.join(' ')
       end
 
+      def self.remove_command(*files)
+        raise GitSiError.new("Remove command requires filenames") if ( files.length == 0 )
+        "#{@@git_binary} rm " + files.join(' ')
+      end
+
       def self.are_there_changes?(status_output)
         status_output.match(/^\s*[MADRC]/)
       end
@@ -113,5 +118,3 @@ module Git
     end
   end
 end
-
-

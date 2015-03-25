@@ -127,6 +127,16 @@ git-si 0.3.0 svn update to version 1014
     end
   end
 
+  describe ".remove_command" do
+    it "raises an error if no files are specified" do
+      expect { Git::Si::GitControl.remove_command }.to raise_error
+    end
+
+    it "returns the correct command with files" do
+      expect( Git::Si::GitControl.remove_command( "foobar" ) ).to eq( "git rm foobar" )
+    end
+  end
+
   describe ".commit_revision_command" do
     it "raises an error if no version is specified" do
       expect { Git::Si::GitControl.commit_revision_command }.to raise_error

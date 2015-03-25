@@ -276,6 +276,18 @@ M something else"
       subject.do_readd_action
     end
 
+    context "when the user declines adding git files unknown to svn" do
+      before do
+        allow( subject ).to receive( :yes? ).and_return( false, true )
+        allow( subject ).to receive( :is_file_in_git? ).and_return( true )
+      end
+
+      it "removes those files from git" do
+        expect( subject ).to receive( :run_command ).with( /git rm.*whatever/, any_args )
+        subject.do_readd_action
+      end
+    end
+
     it "includes the correct files in the svn add command" do
       allow( subject ).to receive( :is_file_in_git? ).and_return( false )
       allow( subject ).to receive( :is_file_in_git? ).with( 'whatever' ).and_return( true )
